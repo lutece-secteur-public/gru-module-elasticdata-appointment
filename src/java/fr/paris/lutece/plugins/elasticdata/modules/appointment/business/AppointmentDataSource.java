@@ -40,18 +40,20 @@ import fr.paris.lutece.plugins.appointment.business.appointment.Appointment;
 import fr.paris.lutece.plugins.appointment.service.AppointmentService;
 import fr.paris.lutece.plugins.appointment.web.dto.AppointmentFilterDTO;
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataSource;
-import fr.paris.lutece.plugins.elasticdata.business.DataObject;
-import fr.paris.lutece.plugins.elasticdata.business.DataSource;
 
-public class AppointmentDataSource extends AbstractDataSource implements DataSource
+/**
+ * Data source for appointment
+ */
+public class AppointmentDataSource extends AbstractDataSource
 {
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public Collection<DataObject> getDataObjects( )
+    public Collection fetchDataObjects( )
     {
-
         AppointmentFilterDTO appointmentFilter = new AppointmentFilterDTO( );
-        Collection<DataObject> collResult = new ArrayList<DataObject>( );
+        Collection collResult = new ArrayList<>( );
 
         for ( Appointment appointment : AppointmentService.findListAppointmentsByFilter( appointmentFilter ) )
         {
