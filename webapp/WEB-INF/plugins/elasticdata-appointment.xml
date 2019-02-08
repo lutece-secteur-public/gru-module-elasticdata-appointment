@@ -20,6 +20,14 @@
 
     <!-- Admin features parameters -->
     <admin-features>
+         <admin-feature>
+            <feature-id>ELASTICDATA_APPOINTMENT_MANAGEMENT</feature-id>
+            <feature-title>module.elasticdata.appointment.adminFeature.ManageElasticData.name</feature-title>
+            <feature-description>module.elasticdata.appointment.adminFeature.ManageElasticData.description</feature-description>
+            <feature-level>0</feature-level>
+            <feature-url>jsp/admin/plugins/elasticdata/modules/appointment/IndexingAppElasticData.jsp</feature-url>
+            <feature-icon-url/>
+      </admin-feature>
     </admin-features>    
 
     <!-- XPages parameters -->

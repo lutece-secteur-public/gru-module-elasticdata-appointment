@@ -33,35 +33,46 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.business;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.text.DateFormat;
+import java.util.Locale;
 
-import fr.paris.lutece.plugins.appointment.business.appointment.Appointment;
-import fr.paris.lutece.plugins.appointment.service.AppointmentService;
-import fr.paris.lutece.plugins.appointment.web.dto.AppointmentFilterDTO;
-import fr.paris.lutece.plugins.elasticdata.business.AbstractDataSource;
+import org.apache.commons.beanutils.BeanUtilsBean;
+import org.dozer.converters.DateConverter;
+
+import fr.paris.lutece.portal.service.plugin.Plugin;
 
 /**
- * Data source for appointment
+ * ElasticDataAppointment Plugin 
+ * 
+ * @author YAHIAOUI RAFIK
+ * 
  */
-public class AppointmentDataSource extends AbstractDataSource
+public final class ElasticDataAppointmentPlugin extends Plugin
 {
+    /**
+     * Name of the ElasticDataAppointment plugin
+     */
+    public static final String PLUGIN_NAME = "elasticdata-appointment";
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public Collection fetchDataObjects( )
+    public void init( )
     {
-        AppointmentFilterDTO appointmentFilter = new AppointmentFilterDTO( );
-        Collection collResult = new ArrayList<>( );
-
-        for ( Appointment appointment : AppointmentService.findListAppointmentsByFilter( appointmentFilter ) )
-        {
-
-            collResult.add( new AppointmentDataObject( appointment ) );
-
-        }
-        return collResult;
+        BeanUtilsBean.getInstance( ).getConvertUtils( )
+                .register( new DateConverter( DateFormat.getDateInstance( DateFormat.SHORT, getPluginLocale( Locale.FRANCE ) ) ), java.sql.Date.class );
     }
 
+    /**
+     * Get the locale used by this plugin
+     * 
+     * @param locale
+     *            The locale preferred by the user
+     * @return The locale used by this plugin
+     */
+    public static Locale getPluginLocale( Locale locale )
+    {
+        return Locale.FRANCE;
+    }
 }
