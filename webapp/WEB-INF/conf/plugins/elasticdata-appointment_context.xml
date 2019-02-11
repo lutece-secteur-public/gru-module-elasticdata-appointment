@@ -6,14 +6,14 @@
 
 	<!-- Appointment datasource -->
 	 <bean id="elasticdata-appointment.appointmentDataObjectDAO" class="fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentDataObjectDAO" />
-       <bean id="elasticdata-appointment.appointmentdataSource" class="fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentDataSource" >
+       <bean id="elasticdata-appointment.appointmentdataSource" class="fr.paris.lutece.plugins.elasticdata.modules.appointment.service.AppointmentDataSource" >
            <property name="id" value="AppointmentDataSource" />
            <property name="name" value="Appointment Data Source" />
            <property name="targetIndexName" value="appointmentdatasource" />
            <property name="dataType" value="appointmentdataobject" />
        </bean>
        
-        <bean id="elasticdata-appointment.appointmentslotdataSource" class="fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentSlotDataSource" >
+        <bean id="elasticdata-appointment.appointmentslotdataSource" class="fr.paris.lutece.plugins.elasticdata.modules.appointment.service.AppointmentSlotDataSource" >
            <property name="id" value="AppointmentSlotDataSource" />
            <property name="name" value="Appointment Slot Data Source" />
            <property name="targetIndexName" value="appointmentslotdatasource" />
