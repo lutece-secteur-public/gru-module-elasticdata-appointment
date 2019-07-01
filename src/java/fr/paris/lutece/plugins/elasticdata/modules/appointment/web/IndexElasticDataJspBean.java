@@ -35,6 +35,7 @@ package fr.paris.lutece.plugins.elasticdata.modules.appointment.web;
 
 import fr.paris.lutece.plugins.elasticdata.business.DataSource;
 import fr.paris.lutece.plugins.elasticdata.service.DataSourceService;
+import fr.paris.lutece.plugins.elasticdata.service.IndexingStatus;
 import fr.paris.lutece.plugins.libraryelastic.util.ElasticClientException;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
@@ -90,13 +91,12 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
     public String doIndex( HttpServletRequest request ) throws ElasticClientException
     {
         StringBuilder sbLogs = new StringBuilder( );
-       
+
         String strDataSourceId = request.getParameter( PARAMETER_DATA_SOURCE );
         DataSource source = DataSourceService.getDataSource( strDataSourceId );
 
-        DataSourceService.processFullIndexing( sbLogs, source, false );
-        
-        
+        DataSourceService.processFullIndexing( sbLogs, source, false, null );
+
         addInfo( sbLogs.toString( ) );
 
         return redirectView( request, VIEW_HOME );
