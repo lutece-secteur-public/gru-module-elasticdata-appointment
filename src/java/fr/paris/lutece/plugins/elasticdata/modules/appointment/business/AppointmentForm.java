@@ -1,8 +1,8 @@
 /*
  * Copyright (c) 2002-2019, Mairie de Paris
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
@@ -30,121 +30,193 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * License 1.0
- */ 
+ */
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.business;
-
 
 import fr.paris.lutece.plugins.appointment.business.category.Category;
 import fr.paris.lutece.plugins.appointment.business.form.Form;
+import fr.paris.lutece.plugins.appointment.business.localization.Localization;
+import fr.paris.lutece.plugins.appointment.service.LocalizationService;
 import fr.paris.lutece.plugins.appointment.web.dto.AppointmentFormDTO;
-
-
 
 /**
  * This is the business class for the object AppointmentForm
- */ 
+ */
 public class AppointmentForm
 {
-        // Variables declarations 
-        private int _nIdForms;
-        private String _strTitleForms;
-        private String _strCategory;
-        private boolean _bIsActive;
-    
-        
-        public AppointmentForm (AppointmentFormDTO appointmentFormDto, Category category){
-        	
-        	_nIdForms= appointmentFormDto.getIdForm();
-        	_strTitleForms= appointmentFormDto.getTitle();
-        	_bIsActive= appointmentFormDto.getIsActive();
-            if ( category != null )
-            {
-            	_strCategory= category.getLabel();
-            }
-        	
-        }
-        
-        public AppointmentForm (Form form, Category category){
-        	
-        	_nIdForms= form.getIdForm();
-        	_strTitleForms= form.getTitle();
-        	_bIsActive= form.getIsActive();
-            if ( category != null )
-            {
-            	_strCategory= category.getLabel();
-            }
-        	
-        }
-    
-       /**
-        * Returns the IdForms
-        * @return The IdForms
-        */ 
-        public int getIdForms()
+    // Variables declarations
+    private int _nIdForms;
+    private String _strTitleForms;
+    private String _strCategory;
+    private boolean _bIsActive;
+    private String _strGeoPoint;
+    private String _strAddress;
+
+    public AppointmentForm( AppointmentFormDTO appointmentFormDto, Category category )
+    {
+
+        _nIdForms = appointmentFormDto.getIdForm( );
+        _strTitleForms = appointmentFormDto.getTitle( );
+        _bIsActive = appointmentFormDto.getIsActive( );
+        if ( category != null )
         {
-            return _nIdForms;
+            _strCategory = category.getLabel( );
         }
-    
-       /**
-        * Sets the IdForms
-        * @param nIdForms The IdForms
-        */ 
-        public void setIdForms( int nIdForms )
+        setLocalization( );
+
+    }
+
+    public AppointmentForm( Form form, Category category )
+    {
+
+        _nIdForms = form.getIdForm( );
+        _strTitleForms = form.getTitle( );
+        _bIsActive = form.getIsActive( );
+        if ( category != null )
         {
-            _nIdForms = nIdForms;
+            _strCategory = category.getLabel( );
         }
-    
-       /**
-        * Returns the TitleForms
-        * @return The TitleForms
-        */ 
-        public String getTitleForms()
+        setLocalization( );
+    }
+
+    /**
+     * Set Localization variable(s) of the AppointmentForm
+     * 
+     * @return The IdForms
+     */
+    private void setLocalization( )
+    {
+        Localization localization = LocalizationService.findLocalizationWithFormId( _nIdForms );
+        if ( localization != null )
         {
-            return _strTitleForms;
+            _strGeoPoint = localization.getLatitude( ) + ", " + localization.getLongitude( );
+            _strAddress = localization.getAddress( );
         }
-    
-       /**
-        * Sets the TitleForms
-        * @param strTitleForms The TitleForms
-        */ 
-        public void setTitleForms( String strTitleForms )
-        {
-            _strTitleForms = strTitleForms;
-        }
-    
-       /**
-        * Returns the Category
-        * @return The Category
-        */ 
-        public String getCategory()
-        {
-            return _strCategory;
-        }
-    
-       /**
-        * Sets the Category
-        * @param strCategory The Category
-        */ 
-        public void setCategory( String strCategory )
-        {
-            _strCategory = strCategory;
-        }
-    
-       /**
-        * Returns the IsActive
-        * @return The IsActive
-        */ 
-        public boolean getIsActive()
-        {
-            return _bIsActive;
-        }
-    
-       /**
-        * Sets the IsActive
-        * @param bIsActive The IsActive
-        */ 
-        public void setIsActive( boolean bIsActive )
-        {
-            _bIsActive = bIsActive;
-        }
- }
+    }
+
+    /**
+     * Returns the IdForms
+     * 
+     * @return The IdForms
+     */
+    public int getIdForms( )
+    {
+        return _nIdForms;
+    }
+
+    /**
+     * Sets the IdForms
+     * 
+     * @param nIdForms
+     *            The IdForms
+     */
+    public void setIdForms( int nIdForms )
+    {
+        _nIdForms = nIdForms;
+    }
+
+    /**
+     * Returns the TitleForms
+     * 
+     * @return The TitleForms
+     */
+    public String getTitleForms( )
+    {
+        return _strTitleForms;
+    }
+
+    /**
+     * Sets the TitleForms
+     * 
+     * @param strTitleForms
+     *            The TitleForms
+     */
+    public void setTitleForms( String strTitleForms )
+    {
+        _strTitleForms = strTitleForms;
+    }
+
+    /**
+     * Returns the Category
+     * 
+     * @return The Category
+     */
+    public String getCategory( )
+    {
+        return _strCategory;
+    }
+
+    /**
+     * Sets the Category
+     * 
+     * @param strCategory
+     *            The Category
+     */
+    public void setCategory( String strCategory )
+    {
+        _strCategory = strCategory;
+    }
+
+    /**
+     * Returns the IsActive
+     * 
+     * @return The IsActive
+     */
+    public boolean getIsActive( )
+    {
+        return _bIsActive;
+    }
+
+    /**
+     * Sets the IsActive
+     * 
+     * @param bIsActive
+     *            The IsActive
+     */
+    public void setIsActive( boolean bIsActive )
+    {
+        _bIsActive = bIsActive;
+    }
+
+    /**
+     * Return The GeoPoint
+     * 
+     * @return The GeoPoint
+     */
+    public String getGeoPoint( )
+    {
+        return _strGeoPoint;
+    }
+
+    /**
+     * Sets the GeoPoint
+     * 
+     * @param strGeoPoint
+     *            The GeoPoint
+     */
+    public void setGeoPoint( String strGeoPoint )
+    {
+        _strGeoPoint = strGeoPoint;
+    }
+
+    /**
+     * Return The Address
+     * 
+     * @return The Address
+     */
+    public String getAddress( )
+    {
+        return _strAddress;
+    }
+
+    /**
+     * Sets the Address
+     * 
+     * @param strAddress
+     *            The GeoPoint
+     */
+    public void setAddress( String strAddress )
+    {
+        _strAddress = strAddress;
+    }
+}
