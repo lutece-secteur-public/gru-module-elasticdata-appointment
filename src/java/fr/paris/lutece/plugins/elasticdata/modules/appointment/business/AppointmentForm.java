@@ -80,14 +80,13 @@ public class AppointmentForm
     }
 
     /**
-     * Set Localization variable(s) of the AppointmentForm
+     * Set AppointmentForm Localization variable(s)
      * 
-     * @return The IdForms
      */
     private void setLocalization( )
     {
         Localization localization = LocalizationService.findLocalizationWithFormId( _nIdForms );
-        if ( localization != null )
+        if ( localization != null &&  !localization.getLatitude( ).isNaN( ) && !localization.getLongitude( ).isNaN( ) )
         {
             _strGeoPoint = localization.getLatitude( ) + ", " + localization.getLongitude( );
             _strAddress = localization.getAddress( );
