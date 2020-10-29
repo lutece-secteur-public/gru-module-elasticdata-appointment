@@ -88,7 +88,7 @@ public class AppointmentDataSource extends AbstractDataSource implements IAppoin
     public Collection<DataObject> fetchDataObjects( )
     {
  
-    	Collection<DataObject> collResult = new ArrayList<DataObject>( );
+    	Collection<DataObject> collResult = new ArrayList< >( );
         LocalDateTime localDate =LocalDateTime.now();
         List<Slot> listSlots= new ArrayList<Slot>();
         AppointmentFilterDTO appointmentFilter= new AppointmentFilterDTO();
@@ -148,12 +148,12 @@ public class AppointmentDataSource extends AbstractDataSource implements IAppoin
 	}
 
 	@Override
-	public String appointmentDateChanged(int nIdAppointment, int nIdSlot,
-			Locale locale) {
-	
+	public String appointmentDateChanged(int nIdAppointment, List<Integer> listIdSlot, Locale locale) {
 		reindexAppointment(nIdAppointment);
 		return null;
 	}
+    
+	
 	@Override
 	public void notifyAppointmentCreated(int nIdAppointment) {
 		reindexAppointment(nIdAppointment);
@@ -180,7 +180,7 @@ public class AppointmentDataSource extends AbstractDataSource implements IAppoin
 		}
 	
 	}
-    
+
    
 
 }
