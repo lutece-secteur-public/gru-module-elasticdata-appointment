@@ -15,7 +15,7 @@ public class AppointmentDataObjectDAO implements IAppointmentDataObject{
 	
 
 	private static final String SQL_QUERY_SELECT_BY_ID_FORM= "SELECT  app.id_appointment,state.name, wh.action_name, app.nb_places, app.is_cancelled, slot.starting_date_time"
-															+" FROM appointment_appointment app INNER JOIN appointment_slot slot ON app.id_slot = slot.id_slot"
+															+" FROM appointment_appointment app INNER JOIN appointment_appointment_slot appslot ON app.id_appointment = appslot.id_appointment INNER JOIN appointment_slot slot ON appslot.id_slot = slot.id_slot"
 	+" LEFT JOIN workflow_resource_workflow wsw on (wsw.id_resource = app.id_appointment and resource_type=?) LEFT JOIN  workflow_state state on (state.id_state= wsw.id_state)"+
 	" LEFT JOIN   (select  DISTINCT a.id_resource, a.id_action, a.creation_date, wa.name as action_name from workflow_resource_history a "
 	+ " inner join (Select MAX(b.creation_date) creation_date, b.id_resource from workflow_resource_history b, workflow_action wa "
