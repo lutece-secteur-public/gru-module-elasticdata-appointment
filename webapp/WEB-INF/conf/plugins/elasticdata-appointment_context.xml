@@ -6,13 +6,11 @@
         <property name="id" value="AppointmentDataSource" />
         <property name="name" value="Appointment Data Source" />
         <property name="targetIndexName" value="appointmentdatasource" />
-        <property name="dataType" value="appointmentdataobject" />
         <property name="mappings">
             <value>
                 <![CDATA[
                             {
                             "mappings": {
-                                "appointmentdataobject": {
                                   "properties": {
                                     "timestamp": {
                                       "format": "epoch_millis",
@@ -22,7 +20,6 @@
                                       "type": "geo_point"
                                     }
                                   }
-                                }
                               }
                             }
                             ]]>
@@ -33,6 +30,21 @@
         <property name="id" value="AppointmentSlotDataSource" />
         <property name="name" value="Appointment Slot Data Source" />
         <property name="targetIndexName" value="appointmentslotdatasource" />
-        <property name="dataType" value="appointmentslotdataobject" />
+        <property name="mappings">
+            <value>
+                <![CDATA[
+                            {
+                            "mappings": {
+                                  "properties": {
+                                    "timestamp": {
+                                      "format": "epoch_millis",
+                                      "type": "date"
+                                    }
+                                  }
+                              }
+                            }
+                            ]]>
+            </value>
+        </property>
     </bean>
 </beans>
