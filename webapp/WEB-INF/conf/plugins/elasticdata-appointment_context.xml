@@ -16,6 +16,10 @@
                                       "format": "epoch_millis",
                                       "type": "date"
                                     },
+                                    "createdTimestamp": {
+                                      "format": "epoch_millis",
+                                      "type": "date"
+                                    },
                                     "appointmentForm.geoPoint": {
                                       "type": "geo_point"
                                     }

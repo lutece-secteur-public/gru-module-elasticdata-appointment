@@ -66,6 +66,8 @@ public class AppointmentDataObject extends AbstractDataObject
         private AppointmentForm _appointmentForm;
         private String _strNameInstance;
         private String _strLastAction;
+        private long _lCreatedTimestamp;
+        private String _strAdminCreator;
       
         public AppointmentDataObject (){
         	
@@ -273,4 +275,40 @@ public class AppointmentDataObject extends AbstractDataObject
          {
         	 _strLastAction= strLastAction;
          }
+
+        /**
+        * Returns the created timestamp
+        * @return The created timestamp
+        */ 
+        public long getCreatedTimestamp()
+        {
+            return _lCreatedTimestamp;
+        }
+    
+        /**
+        * Sets the created timestamp
+        * @param lCreatedTimestamp The created timestamp
+        */ 
+        public void setCreatedTimestamp( long lCreatedTimestamp )
+        {
+            _lCreatedTimestamp = lCreatedTimestamp;
+        }
+
+        /**
+         * Returns the AdminCreator
+         * @return The AdminCreator
+         */ 
+        public String getAdminCreator()
+        {
+            return _strAdminCreator;
+        }
+    
+        /**
+        * Sets the AdminCreator
+        * @param strAdminCreator The AdminCreator
+        */ 
+        public void setAdminCreator( String strAdminCreator )
+        {
+            _strAdminCreator = strAdminCreator;
+        }
 }
