@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2016, Mairie de Paris
+ * Copyright (c) 2002-2020, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,6 @@ package fr.paris.lutece.plugins.elasticdata.modules.appointment.web;
 
 import fr.paris.lutece.plugins.elasticdata.business.DataSource;
 import fr.paris.lutece.plugins.elasticdata.service.DataSourceService;
-import fr.paris.lutece.plugins.elasticdata.service.IndexingStatus;
 import fr.paris.lutece.plugins.libraryelastic.util.ElasticClientException;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
@@ -74,8 +73,8 @@ public class IndexElasticDataJspBean extends MVCAdminJspBean
     public String getIndexingElasticData( HttpServletRequest request )
     {
         Map<String, Object> model = getModel( );
-        model.put( MARK_DATA_SOURCES_APP, SpringContextService.getBean("elasticdata-appointment.appointmentdataSource"));
-        model.put( MARK_DATA_SOURCES_SLOT, SpringContextService.getBean("elasticdata-appointment.appointmentslotdataSource"));
+        model.put( MARK_DATA_SOURCES_APP, SpringContextService.getBean( "elasticdata-appointment.appointmentdataSource" ) );
+        model.put( MARK_DATA_SOURCES_SLOT, SpringContextService.getBean( "elasticdata-appointment.appointmentslotdataSource" ) );
 
         return getPage( PROPERTY_PAGE_TITLE, TEMPLATE_HOME, model );
     }

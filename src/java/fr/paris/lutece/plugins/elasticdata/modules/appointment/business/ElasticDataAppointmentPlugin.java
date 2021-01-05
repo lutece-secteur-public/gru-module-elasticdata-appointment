@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2018, Mairie de Paris
+ * Copyright (c) 2002-2020, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@ import org.dozer.converters.DateConverter;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 
 /**
- * ElasticDataAppointment Plugin 
+ * ElasticDataAppointment Plugin
  * 
  * @author YAHIAOUI RAFIK
  * 

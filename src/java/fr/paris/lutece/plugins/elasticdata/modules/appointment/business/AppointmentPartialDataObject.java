@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2002-2019, Mairie de Paris
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without
+ * Copyright (c) 2002-2020, City of Paris
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
@@ -30,7 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * License 1.0
- */ 
+ */
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.business;
 
 import fr.paris.lutece.plugins.appointment.business.appointment.Appointment;
@@ -38,120 +38,136 @@ import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.Appointme
 import fr.paris.lutece.plugins.workflowcore.business.action.Action;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
 
-
-
 /**
  * This is the business class for the object Partial Appointments
- */ 
-public class AppointmentPartialDataObject 
+ */
+public class AppointmentPartialDataObject
 {
-        // Variables declarations 
-	    
-        private String _strId;
-        private int _nNbPlaces;
-        private boolean _bIsCancelled;
-        private String _strState;
-        private String _strLastAction;
-    
-        public AppointmentPartialDataObject (Appointment appointment, State stateAppointment, Action action ){
-        	
-        	_strId= AppointmentSlotUtil.getAppointmentId(appointment.getIdAppointment( ), AppointmentSlotUtil.INSTANCE_NAME);
-            _nNbPlaces= appointment.getNbPlaces();
-        	_bIsCancelled= appointment.getIsCancelled();
-        	if(action != null){
-        		_strLastAction= action.getName();
-        	}        
-        	if(stateAppointment != null ){
-        	_strState= stateAppointment.getName();
-        	}
-        }
-       /**
-        * Returns the Id
-        * @return The Id
-        */ 
-        public String getId()
+    // Variables declarations
+
+    private String _strId;
+    private int _nNbPlaces;
+    private boolean _bIsCancelled;
+    private String _strState;
+    private String _strLastAction;
+
+    public AppointmentPartialDataObject( Appointment appointment, State stateAppointment, Action action )
+    {
+
+        _strId = AppointmentSlotUtil.getAppointmentId( appointment.getIdAppointment( ), AppointmentSlotUtil.INSTANCE_NAME );
+        _nNbPlaces = appointment.getNbPlaces( );
+        _bIsCancelled = appointment.getIsCancelled( );
+        if ( action != null )
         {
-            return _strId;
+            _strLastAction = action.getName( );
         }
-    
-       /**
-        * Sets the Id
-        * @param nId The Id 
-        */ 
-        public void setId( String nId )
+        if ( stateAppointment != null )
         {
-        	_strId = nId;
+            _strState = stateAppointment.getName( );
         }
-    
-       /**
-        * Returns the NbPlaces
-        * @return The NbPlaces
-        */ 
-        public int getNbPlaces()
-        {
-            return _nNbPlaces;
-        }
-    
-       /**
-        * Sets the NbPlaces
-        * @param nNbPlaces The NbPlaces
-        */ 
-        public void setNbPlaces( int nNbPlaces )
-        {
-            _nNbPlaces = nNbPlaces;
-        }
-    
-       /**
-        * Returns the IsCancelled
-        * @return The IsCancelled
-        */ 
-        public boolean getIsCancelled()
-        {
-            return _bIsCancelled;
-        }
-    
-       /**
-        * Sets the IsCancelled
-        * @param bIsCancelled The IsCancelled
-        */ 
-        public void setIsCancelled( boolean bIsCancelled )
-        {
-            _bIsCancelled = bIsCancelled;
-        }
-        
-       /**
-        * Returns the State
-        * @return The State
-        */ 
-        public String getState()
-        {
-            return _strState;
-        }
-    
-       /**
-        * Sets the State
-        * @param strState The State
-        */ 
-        public void setState( String strState )
-        {
-            _strState = strState;
-        }
-  
-         /**
-          * 
-          * @return
-          */
-         public String getLastAction()
-         {
-             return _strLastAction;
-         }
-     
-        /**
-         * Sets the _strLastAction
-         * @param _strLastAction The ActionLastAction
-         */ 
-         public void setLastAction( String strLastAction )
-         {
-        	 _strLastAction= strLastAction;
-         }
+    }
+
+    /**
+     * Returns the Id
+     * 
+     * @return The Id
+     */
+    public String getId( )
+    {
+        return _strId;
+    }
+
+    /**
+     * Sets the Id
+     * 
+     * @param nId
+     *            The Id
+     */
+    public void setId( String nId )
+    {
+        _strId = nId;
+    }
+
+    /**
+     * Returns the NbPlaces
+     * 
+     * @return The NbPlaces
+     */
+    public int getNbPlaces( )
+    {
+        return _nNbPlaces;
+    }
+
+    /**
+     * Sets the NbPlaces
+     * 
+     * @param nNbPlaces
+     *            The NbPlaces
+     */
+    public void setNbPlaces( int nNbPlaces )
+    {
+        _nNbPlaces = nNbPlaces;
+    }
+
+    /**
+     * Returns the IsCancelled
+     * 
+     * @return The IsCancelled
+     */
+    public boolean getIsCancelled( )
+    {
+        return _bIsCancelled;
+    }
+
+    /**
+     * Sets the IsCancelled
+     * 
+     * @param bIsCancelled
+     *            The IsCancelled
+     */
+    public void setIsCancelled( boolean bIsCancelled )
+    {
+        _bIsCancelled = bIsCancelled;
+    }
+
+    /**
+     * Returns the State
+     * 
+     * @return The State
+     */
+    public String getState( )
+    {
+        return _strState;
+    }
+
+    /**
+     * Sets the State
+     * 
+     * @param strState
+     *            The State
+     */
+    public void setState( String strState )
+    {
+        _strState = strState;
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public String getLastAction( )
+    {
+        return _strLastAction;
+    }
+
+    /**
+     * Sets the _strLastAction
+     * 
+     * @param _strLastAction
+     *            The ActionLastAction
+     */
+    public void setLastAction( String strLastAction )
+    {
+        _strLastAction = strLastAction;
+    }
 }
