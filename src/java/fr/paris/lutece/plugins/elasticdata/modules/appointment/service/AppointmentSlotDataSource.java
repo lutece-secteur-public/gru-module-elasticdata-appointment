@@ -42,8 +42,10 @@ import fr.paris.lutece.plugins.appointment.business.category.Category;
 import fr.paris.lutece.plugins.appointment.business.category.CategoryHome;
 import fr.paris.lutece.plugins.appointment.business.planning.WeekDefinition;
 import fr.paris.lutece.plugins.appointment.business.planning.WeekDefinitionHome;
+import fr.paris.lutece.plugins.appointment.business.rule.ReservationRule;
 import fr.paris.lutece.plugins.appointment.business.slot.Slot;
 import fr.paris.lutece.plugins.appointment.service.FormService;
+import fr.paris.lutece.plugins.appointment.service.ReservationRuleService;
 import fr.paris.lutece.plugins.appointment.service.SlotService;
 import fr.paris.lutece.plugins.appointment.service.listeners.IFormListener;
 import fr.paris.lutece.plugins.appointment.service.listeners.ISlotListener;
@@ -167,25 +169,28 @@ public class AppointmentSlotDataSource extends AbstractDataSource implements IFo
             AppLogService.error( "Error during ElasticDataAppointmentListener reindexSlot: " + e.getMessage( ), e );
         }
     }
+    
 
     @Override
-    public void notifyWeekDefinitionChange( int nIdWeekDefinition )
+    public void notifyListWeeksChanged( int nIdWeekDefinition )
     {
         WeekDefinition weekDefinition = WeekDefinitionHome.findByPrimaryKey( nIdWeekDefinition );
-        reindexForm( this, FormService.buildAppointmentFormLight( weekDefinition.getIdForm( ) ) );
+        ReservationRule reservationRule = ReservationRuleService.findReservationRuleById( weekDefinition.getIdReservationRule( ) );
+        reindexForm( this, FormService.buildAppointmentFormLight( reservationRule.getIdForm( ) ) );
 
     }
 
     @Override
-    public void notifyWeekDefinitionCreation( int nIdWeekDefinition )
+    public void notifyWeekAssigned( int nIdWeekDefinition )
     {
         WeekDefinition weekDefinition = WeekDefinitionHome.findByPrimaryKey( nIdWeekDefinition );
-        reindexForm( this, FormService.buildAppointmentFormLight( weekDefinition.getIdForm( ) ) );
+        ReservationRule reservationRule = ReservationRuleService.findReservationRuleById( weekDefinition.getIdReservationRule( ) );
+        reindexForm( this, FormService.buildAppointmentFormLight( reservationRule.getIdForm( ) ) );
 
     }
 
     @Override
-    public void notifyWeekDefinitionRemoval( int nIdForm )
+    public void notifyWeekUnassigned( int nIdForm )
     {
         reindexForm( this, FormService.buildAppointmentFormLight( nIdForm ) );
 
@@ -253,5 +258,4 @@ public class AppointmentSlotDataSource extends AbstractDataSource implements IFo
         }
 
     }
-
 }

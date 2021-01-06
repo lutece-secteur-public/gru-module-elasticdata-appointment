@@ -43,6 +43,7 @@ import java.time.temporal.TemporalField;
 import java.time.temporal.WeekFields;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -54,9 +55,11 @@ import fr.paris.lutece.plugins.appointment.business.appointment.Appointment;
 import fr.paris.lutece.plugins.appointment.business.display.Display;
 import fr.paris.lutece.plugins.appointment.business.planning.WeekDefinition;
 import fr.paris.lutece.plugins.appointment.business.rule.FormRule;
+import fr.paris.lutece.plugins.appointment.business.rule.ReservationRule;
 import fr.paris.lutece.plugins.appointment.business.slot.Slot;
 import fr.paris.lutece.plugins.appointment.service.DisplayService;
 import fr.paris.lutece.plugins.appointment.service.FormRuleService;
+import fr.paris.lutece.plugins.appointment.service.ReservationRuleService;
 import fr.paris.lutece.plugins.appointment.service.SlotService;
 import fr.paris.lutece.plugins.appointment.service.WeekDefinitionService;
 import fr.paris.lutece.plugins.appointment.web.dto.AppointmentFormDTO;
@@ -117,7 +120,8 @@ public final class AppointmentSlotUtil
      */
     public static List<Slot> getAllSlots( AppointmentFormDTO appointmentForm, LocalDateTime localDateTime, int nNbPlacesToTake )
     {
-        Display display = DisplayService.findDisplayWithFormId( appointmentForm.getIdForm( ) );
+        int idForm = appointmentForm.getIdForm( );
+        Display display = DisplayService.findDisplayWithFormId( idForm );
         // Get the nb weeks to display
         int nNbWeeksToDisplay = display.getNbWeeksToDisplay( );
         // Calculate the ending date of display with the nb weeks to display
@@ -137,19 +141,20 @@ public final class AppointmentSlotUtil
             endingDateOfDisplay = endingValidityDate;
         }
 
-        HashMap<LocalDate, WeekDefinition> mapWeekDefinition = WeekDefinitionService.findAllWeekDefinition( appointmentForm.getIdForm( ) );
+        HashMap<LocalDate, WeekDefinition> mapWeekDefinition = WeekDefinitionService.findAllWeekDefinition( idForm );
+        Map<WeekDefinition, ReservationRule> mapReservationRule = ReservationRuleService.findAllReservationRule( idForm, mapWeekDefinition.values( ) );
+
         LocalDateTime minTimeBeforeAppointment = localDateTime.plusHours( appointmentForm.getMinTimeBeforeAppointment( ) );
 
         if ( appointmentForm.getIsMultislotAppointment( ) )
         {
-            return SlotService.buildListSlot( appointmentForm.getIdForm( ), mapWeekDefinition, minTimeBeforeAppointment.toLocalDate( ),
+            return SlotService.buildListSlot( idForm, mapReservationRule, minTimeBeforeAppointment.toLocalDate( ),
                     localDateTime.toLocalDate( ), nNbPlacesToTake );
         }
         else
         {
             return SlotService.buildListSlot( appointmentForm.getIdForm( ), mapWeekDefinition, localDateTime.toLocalDate( ), endingDateOfDisplay );
         }
-
     }
 
     /**
