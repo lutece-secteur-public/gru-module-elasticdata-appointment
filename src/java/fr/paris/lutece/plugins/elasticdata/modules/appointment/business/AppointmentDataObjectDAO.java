@@ -130,7 +130,7 @@ public class AppointmentDataObjectDAO implements IAppointmentDataObject
             apptData.setTimeUntilCategoryAvailability( Long.parseLong( timeUntilAvailabilityCategoryHistory.getDataValue( ) ) );
         }
 
-        // AppointmentSlotUtil.buildAppointmentDataObject(apptData, listSlots, listSlotsCategory, localTime, appointmentForm);
+        AppointmentSlotUtil.buildAppointmentDataObject(apptData, listSlots, listSlotsCategory, localTime, appointmentForm);
 
         return apptData;
     }
