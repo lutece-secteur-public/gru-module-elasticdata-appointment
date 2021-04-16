@@ -33,229 +33,64 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import fr.paris.lutece.plugins.appointment.business.category.Category;
 import fr.paris.lutece.plugins.appointment.business.category.CategoryHome;
-import fr.paris.lutece.plugins.appointment.business.planning.WeekDefinition;
-import fr.paris.lutece.plugins.appointment.business.planning.WeekDefinitionHome;
-import fr.paris.lutece.plugins.appointment.business.rule.ReservationRule;
 import fr.paris.lutece.plugins.appointment.business.slot.Slot;
 import fr.paris.lutece.plugins.appointment.service.FormService;
-import fr.paris.lutece.plugins.appointment.service.ReservationRuleService;
-import fr.paris.lutece.plugins.appointment.service.SlotService;
-import fr.paris.lutece.plugins.appointment.service.listeners.IFormListener;
-import fr.paris.lutece.plugins.appointment.service.listeners.ISlotListener;
-import fr.paris.lutece.plugins.appointment.service.listeners.IWeekDefinitionListener;
 import fr.paris.lutece.plugins.appointment.web.dto.AppointmentFormDTO;
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataSource;
+import fr.paris.lutece.plugins.elasticdata.business.BatchDataObjectsIterator;
 import fr.paris.lutece.plugins.elasticdata.business.DataObject;
-import fr.paris.lutece.plugins.elasticdata.business.DataSource;
 import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentSlotDataObject;
-import fr.paris.lutece.plugins.elasticdata.service.DataSourceService;
-import fr.paris.lutece.plugins.libraryelastic.util.ElasticClientException;
-import fr.paris.lutece.portal.service.util.AppLogService;
 
 /**
  * Data source for appointment
  */
-public class AppointmentSlotDataSource extends AbstractDataSource implements IFormListener, ISlotListener, IWeekDefinitionListener
+public class AppointmentSlotDataSource extends AbstractDataSource 
 {
 
-    /**
+	/**
      * {@inheritDoc}
      */
-    @Override
-    public Collection<DataObject> fetchDataObjects( )
-    {
-
-        Collection<DataObject> collResult = new ArrayList<DataObject>( );
-
-        LocalDateTime localDateTime = LocalDateTime.now( );
-        List<Slot> listSlots = new ArrayList<Slot>( );
-
-        for ( AppointmentFormDTO appointment : FormService.buildAllActiveAppointmentForm( ) )
-        {
-            Category category = CategoryHome.findByPrimaryKey( appointment.getIdCategory( ) );
-            listSlots = AppointmentSlotUtil.getAllSlots( appointment, localDateTime );
-            for ( Slot appointmentSlot : listSlots )
-            {
-                collResult.add(
-                        new AppointmentSlotDataObject( appointment, appointmentSlot, AppointmentSlotUtil.INSTANCE_NAME, listSlots, localDateTime, category ) );
-
-            }
-            listSlots.clear( );
-            for ( Slot slot : SlotService.findListSlot( appointment.getIdForm( ) ) )
-            {
-                if ( slot.getStartingDateTime( ).isBefore( localDateTime ) && slot.getNbPlacesTaken( ) > 0 )
-                {
-
-                    collResult.add( new AppointmentSlotDataObject( appointment, slot, AppointmentSlotUtil.INSTANCE_NAME, listSlots, localDateTime, category ) );
-                }
-            }
-
-        }
+	@Override
+	public List<String> getIdDataObjects() {
+		
+		return FormService.findAllForms().stream().map(form -> String.valueOf(form.getIdForm())).collect(Collectors.toList());
+	}
+	/**
+     * {@inheritDoc}
+     */
+	@Override
+	public List<DataObject> getDataObjects(List<String> listIdDataObjects) {
+		
+		this.setBatchSize( BATCH_SIZE );
+		List<DataObject> collResult = new ArrayList< >( );
+		for(String strIdForm: listIdDataObjects) {
+			
+			AppointmentFormDTO appointmentForm =FormService.buildAppointmentFormWithoutReservationRule(Integer.parseInt( strIdForm ));
+			Category category = CategoryHome.findByPrimaryKey( appointmentForm.getIdCategory( ) );
+			 List<Slot> listSlots = AppointmentSlotUtil.getAllSlotsToFullIndexing( appointmentForm );
+	        for ( Slot appointmentSlot : listSlots )
+	        {
+	            collResult.add(
+	                    new AppointmentSlotDataObject( appointmentForm, appointmentSlot, AppointmentSlotUtil.INSTANCE_NAME,  category ) );
+	
+	        }
+		}
         return collResult;
-    }
-
-    /**
-     * Reindex the form and the slots in elastic-searche
-     * 
-     * @param appoointmentData
-     *            the form appointment
-     */
-    public static void reindexForm( DataSource appoointmentData, AppointmentFormDTO apptFormdto )
-    {
-
-        ( new Thread( )
-        {
-            @Override
-            public void run( )
-            {
-                StringBuilder sbuilderLogs = new StringBuilder( );
-                Collection<DataObject> collResult = new ArrayList<DataObject>( );
-                String instanceName = AppointmentSlotUtil.INSTANCE_NAME;
-                LocalDateTime localDateTime = LocalDateTime.now( );
-                List<Slot> listSlots = new ArrayList<Slot>( );
-                Category category = CategoryHome.findByPrimaryKey( apptFormdto.getIdCategory( ) );
-                listSlots = AppointmentSlotUtil.getAllSlots( apptFormdto, localDateTime );
-
-                for ( Slot appointmentSlot : listSlots )
-                {
-                    collResult.add( new AppointmentSlotDataObject( apptFormdto, appointmentSlot, instanceName, listSlots, localDateTime, category ) );
-
-                }
-
-                try
-                {
-
-                    DataSourceService.deleteByQuery( appoointmentData, AppointmentSlotUtil.buildQuery( apptFormdto.getIdForm( ) ) );
-                    DataSourceService.processIncrementalIndexing( sbuilderLogs, appoointmentData, collResult );
-
-                }
-                catch( ElasticClientException e )
-                {
-                    AppLogService.error( "Error during ElasticDataAppointmentListener reindexForm: " + sbuilderLogs, e );
-                }
-
-            }
-        } ).start( );
-    }
-
-    /**
-     * Reindex the slot (and the related form to have the good number of available places) in solr
-     * 
-     * @param nIdSlot
-     *            the slot id
-     */
-    public static void reindexSlot( Slot slot, DataSource appoointmentData, AppointmentFormDTO apptFormdto )
-    {
-        String instanceName = AppointmentSlotUtil.INSTANCE_NAME;
-        List<Slot> listSlots = new ArrayList<Slot>( );
-        Category category = CategoryHome.findByPrimaryKey( apptFormdto.getIdCategory( ) );
-        listSlots = AppointmentSlotUtil.getAllSlots( apptFormdto, LocalDateTime.now( ) );
-
-        try
-        {
-            AppointmentSlotDataObject appointmentSlot = new AppointmentSlotDataObject( apptFormdto, slot, instanceName, listSlots, LocalDateTime.now( ),
-                    category );
-            DataSourceService.processIncrementalIndexing( appoointmentData, appointmentSlot );
-        }
-        catch( ElasticClientException e )
-        {
-            AppLogService.error( "Error during ElasticDataAppointmentListener reindexSlot: " + e.getMessage( ), e );
-        }
-    }
-    
-
-    @Override
-    public void notifyListWeeksChanged( int nIdWeekDefinition )
-    {
-        WeekDefinition weekDefinition = WeekDefinitionHome.findByPrimaryKey( nIdWeekDefinition );
-        ReservationRule reservationRule = ReservationRuleService.findReservationRuleById( weekDefinition.getIdReservationRule( ) );
-        reindexForm( this, FormService.buildAppointmentFormLight( reservationRule.getIdForm( ) ) );
-
-    }
-
-    @Override
-    public void notifyWeekAssigned( int nIdWeekDefinition )
-    {
-        WeekDefinition weekDefinition = WeekDefinitionHome.findByPrimaryKey( nIdWeekDefinition );
-        ReservationRule reservationRule = ReservationRuleService.findReservationRuleById( weekDefinition.getIdReservationRule( ) );
-        reindexForm( this, FormService.buildAppointmentFormLight( reservationRule.getIdForm( ) ) );
-
-    }
-
-    @Override
-    public void notifyWeekUnassigned( int nIdForm )
-    {
-        reindexForm( this, FormService.buildAppointmentFormLight( nIdForm ) );
-
-    }
-
-    @Override
-    public void notifySlotChange( int nIdSlot )
-    {
-        Slot slot = SlotService.findSlotById( nIdSlot );
-        reindexSlot( slot, this, FormService.buildAppointmentFormLight( slot.getIdForm( ) ) );
-    }
-
-    @Override
-    public void notifySlotCreation( int nIdSlot )
-    {
-        Slot slot = SlotService.findSlotById( nIdSlot );
-        reindexSlot( slot, this, FormService.buildAppointmentFormLight( slot.getIdForm( ) ) );
-
-    }
-
-    @Override
-    public void notifySlotRemoval( int nIdSlot )
-    {
-        // The listener is called before the actual deletion, so we can get the
-        // slot.
-        Slot slot = SlotService.findSlotById( nIdSlot );
-        try
-        {
-            DataSourceService.deleteById( this, AppointmentSlotUtil.getSlotUid( slot, AppointmentSlotUtil.INSTANCE_NAME ) );
-        }
-        catch( ElasticClientException e )
-        {
-            AppLogService.error( "Error during ElasticDataAppointmentListener remove slot: " + e.getMessage( ), e );
-        }
-        reindexForm( this, FormService.buildAppointmentFormLight( slot.getIdForm( ) ) );
-
-    }
-
-    @Override
-    public void notifyFormChange( int nIdForm )
-    {
-        reindexForm( this, FormService.buildAppointmentFormLight( nIdForm ) );
-
-    }
-
-    @Override
-    public void notifyFormCreation( int nIdForm )
-    {
-        reindexForm( this, FormService.buildAppointmentFormLight( nIdForm ) );
-
-    }
-
-    @Override
-    public void notifyFormRemoval( int nIdForm )
-    {
-        try
-        {
-            DataSourceService.deleteByQuery( this, AppointmentSlotUtil.buildQuery( nIdForm ) );
-        }
-        catch( ElasticClientException e )
-        {
-
-            AppLogService.error( "Error during ElasticDataAppointmentListener remove Form: " + e.getMessage( ), e );
-            ;
-        }
-
-    }
+	}
+	@Override
+	public Iterator<DataObject> getDataObjectsIterator( )
+	{
+	     List<String> listIdDataObject= this.getIdDataObjects( );
+	     this.getIndexingStatus().setnNbTotalObj(listIdDataObject.size( ));
+	     this.setBatchSize( 1 );
+	     return new BatchDataObjectsIterator( this, listIdDataObject );
+	 }
+   
 }

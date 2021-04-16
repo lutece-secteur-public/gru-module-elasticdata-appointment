@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.business;
 
+import java.sql.Timestamp;
+
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataObject;
 import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.AppointmentSlotUtil;
 
@@ -48,7 +50,9 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
     private String _strActionName;
     private long _lTaskDuration;
     private long _lAppointmentDuration;
+    private long _lAppointmentDateActionDateDuration;
     private String _strUnitName;
+    private Timestamp _tCreationDate;
 
     public AppointmentHistoryDataObject( int resourceHistoryId )
     {
@@ -140,7 +144,7 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
     }
 
     /**
-     * Returns the Duration
+     * Returns the Duration between appointment taken date and action date
      * 
      * @return The Duration
      */
@@ -150,7 +154,7 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
     }
 
     /**
-     * Sets the Duration
+     * Sets the Duration between appointment taken date and action date
      * 
      * @param lAppointmentDuration
      *            The Duration
@@ -158,6 +162,26 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
     public void setAppointmentDuration( long lAppointmentDuration )
     {
         _lAppointmentDuration = lAppointmentDuration;
+    }
+    /**
+     * Returns the Duration between appointment date and action date
+     * 
+     * @return The Duration
+     */
+    public long getAppointmentDateActionDateDuration( )
+    {
+        return _lAppointmentDateActionDateDuration;
+    }
+
+    /**
+     * Sets the Duration between appointment date and action date
+     * 
+     * @param lAppointmentDateActionDateDuration
+     *            The Duration
+     */
+    public void setAppointmentDateActionDateDuration( long lAppointmentDateActionDateDuration )
+    {
+    	_lAppointmentDateActionDateDuration = lAppointmentDateActionDateDuration;
     }
 
     /**
@@ -222,4 +246,24 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
     {
         _strActionName = strActionName;
     }
+    /**
+    *
+    * @return the creation date
+    */
+   public Timestamp getCreationDate( )
+   {
+       return _tCreationDate;
+   }
+
+   /**
+    * set the creation date
+    * 
+    * @param dateCreation
+    *            the creation date
+    */
+   public void setCreationDate( Timestamp dateCreation )
+   {
+       _tCreationDate = dateCreation;
+   }
+
 }

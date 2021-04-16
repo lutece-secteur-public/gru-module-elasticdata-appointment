@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><plug-in>
     <name>elasticdata-appointment</name>
-    <class>fr.paris.lutece.portal.service.plugin.PluginDefaultImplementation</class>
-    <version>2.1.0-SNAPSHOT</version>
+    <class>fr.paris.lutece.plugins.elasticdata.modules.appointment.business.ElasticDataAppointmentPlugin</class>
+    <version>3.0.0-SNAPSHOT</version>
     <documentation/>
     <installation/>
     <changes/>
@@ -20,14 +20,6 @@
 
     <!-- Admin features parameters -->
     <admin-features>
-         <admin-feature>
-            <feature-id>ELASTICDATA_APPOINTMENT_MANAGEMENT</feature-id>
-            <feature-title>module.elasticdata.appointment.adminFeature.ManageElasticData.name</feature-title>
-            <feature-description>module.elasticdata.appointment.adminFeature.ManageElasticData.description</feature-description>
-            <feature-level>0</feature-level>
-            <feature-url>jsp/admin/plugins/elasticdata/modules/appointment/IndexingAppElasticData.jsp</feature-url>
-            <feature-icon-url/>
-      </admin-feature>
     </admin-features>    
 
     <!-- XPages parameters -->

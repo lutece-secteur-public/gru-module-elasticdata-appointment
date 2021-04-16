@@ -34,17 +34,12 @@
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.business;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.codehaus.plexus.util.StringUtils;
 
-import org.apache.commons.collections.CollectionUtils;
-
-import fr.paris.lutece.plugins.appointment.business.slot.Slot;
-import fr.paris.lutece.plugins.appointment.web.dto.AppointmentDTO;
+import fr.paris.lutece.plugins.appointment.business.appointment.Appointment;
+import fr.paris.lutece.plugins.appointment.service.AppointmentUtilities;
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataObject;
 import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.AppointmentSlotUtil;
-import fr.paris.lutece.plugins.workflowcore.business.action.Action;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
 
 /**
@@ -63,17 +58,15 @@ public class AppointmentDataObject extends AbstractDataObject
     private String _strState;
     private AppointmentForm _appointmentForm;
     private String _strNameInstance;
-    private String _strLastAction;
     private long _lCreatedTimestamp;
-    private String _strAdminCreator;
+    private boolean _bIsFront;
 
     public AppointmentDataObject( )
     {
 
     }
 
-    public AppointmentDataObject( AppointmentDTO appointment, State stateAppointment, Action action, List<Slot> listSlots, List<Slot> listSlotsFromCategory,
-            LocalDateTime localTime, AppointmentForm appointmentForm )
+    public AppointmentDataObject( Appointment appointment, State stateAppointment, AppointmentForm appointmentForm )
     {
 
         setId( AppointmentSlotUtil.getAppointmentId( appointment.getIdAppointment( ), AppointmentSlotUtil.INSTANCE_NAME ) );
@@ -81,35 +74,14 @@ public class AppointmentDataObject extends AbstractDataObject
         _nNbPlaces = appointment.getNbPlaces( );
         _bIsCancelled = appointment.getIsCancelled( );
         _strNameInstance = AppointmentSlotUtil.INSTANCE_NAME;
+        _bIsFront = StringUtils.isEmpty( appointment.getAdminUserCreate( ));
         _appointmentForm = appointmentForm;
-        if ( action != null )
-        {
-            _strLastAction = action.getName( );
-        }
-
-        if ( CollectionUtils.isNotEmpty( listSlots ) )
-        {
-            listSlots = listSlots.stream( ).filter( s -> s.getStartingDateTime( ).isAfter( localTime ) ).collect( Collectors.toList( ) );
-        }
-
-        List<Slot> listAvailableSlots = listSlots.stream( ).filter( s -> s.getStartingDateTime( ).isAfter( localTime )
-                && s.getStartingDateTime( ).isBefore( appointment.getStartingDateTime( ) ) && s.getIsOpen( ) == Boolean.TRUE ).collect( Collectors.toList( ) );
-
-        List<Slot> listAvailableCategorySlots = listSlotsFromCategory.stream( ).filter( s -> s.getStartingDateTime( ).isAfter( localTime )
-                && s.getStartingDateTime( ).isBefore( appointment.getStartingDateTime( ) ) && s.getIsOpen( ) == Boolean.TRUE ).collect( Collectors.toList( ) );
-
-        _lSumNbPlacesBeforeAppointment = listAvailableSlots.stream( ).mapToLong( s -> s.getMaxCapacity( ) ).sum( );
-
-        _lTimeUntilAvailability = AppointmentSlotUtil.getTimeUntilAvailability( listAvailableSlots, localTime, appointment.getStartingDateTime( ) );
-        _lTimeUntilAvailabilityCategory = AppointmentSlotUtil.getTimeUntilAvailability( listAvailableCategorySlots, localTime,
-                appointment.getStartingDateTime( ) );
-
+          
         if ( stateAppointment != null )
         {
             _strState = stateAppointment.getName( );
         }
-
-        setTimestamp( Timestamp.valueOf( appointment.getStartingDateTime( ) ).getTime( ) );
+        setTimestamp( Timestamp.valueOf( AppointmentUtilities.getStartingDateTime( appointment ) ).getTime( ));
     }
 
     /**
@@ -301,25 +273,7 @@ public class AppointmentDataObject extends AbstractDataObject
         _appointmentForm = appointmentForm;
     }
 
-    /**
-     * 
-     * @return
-     */
-    public String getLastAction( )
-    {
-        return _strLastAction;
-    }
-
-    /**
-     * Sets the _strLastAction
-     * 
-     * @param _strLastAction
-     *            The ActionLastAction
-     */
-    public void setLastAction( String strLastAction )
-    {
-        _strLastAction = strLastAction;
-    }
+    
 
     /**
      * Returns the created timestamp
@@ -343,23 +297,23 @@ public class AppointmentDataObject extends AbstractDataObject
     }
 
     /**
-     * Returns the AdminCreator
+     * Returns if the appointment is taken in FO calendar
      * 
-     * @return The AdminCreator
+     * @return The bollean
      */
-    public String getAdminCreator( )
+    public boolean getAdminCreator( )
     {
-        return _strAdminCreator;
+        return _bIsFront;
     }
 
     /**
-     * Sets the AdminCreator
+     * Sets the bIsFront
      * 
-     * @param strAdminCreator
-     *            The AdminCreator
+     * @param bIsFront
+     *            The bIsFront
      */
-    public void setAdminCreator( String strAdminCreator )
+    public void setAdminCreator( boolean bIsFront )
     {
-        _strAdminCreator = strAdminCreator;
+    	_bIsFront = bIsFront;
     }
 }

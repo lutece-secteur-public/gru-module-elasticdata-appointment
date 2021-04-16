@@ -34,8 +34,6 @@
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.business;
 
 import fr.paris.lutece.plugins.appointment.business.category.Category;
-import fr.paris.lutece.plugins.appointment.business.localization.Localization;
-import fr.paris.lutece.plugins.appointment.service.LocalizationService;
 import fr.paris.lutece.plugins.appointment.web.dto.AppointmentFormDTO;
 
 /**
@@ -66,22 +64,12 @@ public class AppointmentForm
         {
             _strCategory = category.getLabel( );
         }
-        setLocalization( );
-
-    }
-
-    /**
-     * Set AppointmentForm Localization variable(s)
-     * 
-     */
-    private void setLocalization( )
-    {
-        Localization localization = LocalizationService.findLocalizationWithFormId( _nIdForms );
-        if ( localization != null && localization.getLatitude( ) != null && localization.getLongitude( ) != null )
+        if (  appointmentFormDto.getLatitude( ) != null && appointmentFormDto.getLongitude( ) != null )
         {
-            _strGeoPoint = localization.getLatitude( ) + ", " + localization.getLongitude( );
-            _strAddress = localization.getAddress( );
+            _strGeoPoint = appointmentFormDto.getLatitude( ) + ", " + appointmentFormDto.getLongitude( );
+            _strAddress = appointmentFormDto.getAddress( );
         }
+
     }
 
     /**

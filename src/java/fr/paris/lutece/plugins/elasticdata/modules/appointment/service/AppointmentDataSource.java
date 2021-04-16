@@ -33,194 +33,36 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
-
-import javax.inject.Inject;
-
-import fr.paris.lutece.plugins.appointment.business.appointment.Appointment;
-import fr.paris.lutece.plugins.appointment.business.category.Category;
-import fr.paris.lutece.plugins.appointment.business.category.CategoryHome;
-import fr.paris.lutece.plugins.appointment.business.form.Form;
-import fr.paris.lutece.plugins.appointment.business.form.FormHome;
-import fr.paris.lutece.plugins.appointment.business.slot.Slot;
-import fr.paris.lutece.plugins.appointment.service.AppointmentService;
-import fr.paris.lutece.plugins.appointment.service.FormService;
-import fr.paris.lutece.plugins.appointment.service.listeners.IAppointmentListener;
-import fr.paris.lutece.plugins.appointment.service.listeners.IAppointmentWorkflowActionListener;
-import fr.paris.lutece.plugins.appointment.web.dto.AppointmentDTO;
-import fr.paris.lutece.plugins.appointment.web.dto.AppointmentFilterDTO;
-import fr.paris.lutece.plugins.appointment.web.dto.AppointmentFormDTO;
+import fr.paris.lutece.plugins.appointment.business.appointment.AppointmentHome;
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataSource;
 import fr.paris.lutece.plugins.elasticdata.business.DataObject;
-import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentDataHistory;
-import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentDataHistoryHome;
-import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentDataObject;
-import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentDataObjectHome;
-import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentForm;
-import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentPartialDataObject;
-import fr.paris.lutece.plugins.elasticdata.service.DataSourceService;
-import fr.paris.lutece.plugins.libraryelastic.util.ElasticClientException;
-import fr.paris.lutece.plugins.workflowcore.business.action.Action;
-import fr.paris.lutece.plugins.workflowcore.business.resource.ResourceHistory;
-import fr.paris.lutece.plugins.workflowcore.business.state.State;
-import fr.paris.lutece.plugins.workflowcore.service.action.IActionService;
-import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
-import fr.paris.lutece.portal.service.util.AppLogService;
 
 /**
  * Data source for appointment
  */
-public class AppointmentDataSource extends AbstractDataSource implements IAppointmentListener, IAppointmentWorkflowActionListener
-{
-    @Inject
-    private IResourceHistoryService _resourceHistoryService;
-    @Inject
-    private IActionService _actionService;
+public class AppointmentDataSource extends AbstractDataSource
+{    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<String> getIdDataObjects( )
+    {      
+    	return AppointmentHome.selectAllAppointmentId( ).stream().map(intNumber -> String.valueOf( intNumber)).collect(Collectors.toList());
+    	
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Collection<DataObject> fetchDataObjects( )
-    {
-
-        Collection<DataObject> collResult = new ArrayList<>( );
-        LocalDateTime localDateTime = LocalDateTime.now( );
-        List<Slot> listSlots = new ArrayList<Slot>( );
-        List<Slot> listSlotsFromCategory = new ArrayList<Slot>( );
-        AppointmentFilterDTO appointmentFilter = new AppointmentFilterDTO( );
-
-        List<Form> listForm = FormHome.findActiveForms( );
-        for ( Form form : listForm )
-        {
-            Category category = CategoryHome.findByPrimaryKey( form.getIdCategory( ) );
-            AppointmentForm appointmentForm = new AppointmentForm( FormService.buildAppointmentFormLight( form ), category );
-            appointmentFilter.setIdForm( form.getIdForm( ) );
-            collResult.addAll(
-                    AppointmentDataObjectHome.selectListAppointData( form.getIdForm( ), listSlots, listSlotsFromCategory, localDateTime, appointmentForm ) );
-        }
-
-        return collResult;
+    public List<DataObject> getDataObjects( List<String> idList )
+    {   	
+        List<Integer>  listIdDataObject=idList.stream().map( Integer::parseInt ).collect(Collectors.toList());
+        return IndexingAppointmentService.getService().buildDataObjects( listIdDataObject );
     }
-
-    public void reindexAppointment( int nIdAppointment )
-    {
-        try
-        {
-            Action action = null;
-            State stateAppointment = null;
-            AppointmentDTO appointment = AppointmentService.buildAppointmentDTOFromIdAppointment( nIdAppointment );
-            LocalDateTime localDateTime = LocalDateTime.now( );
-            AppointmentFormDTO form = FormService.buildAppointmentFormLight( appointment.getIdForm( ) );
-            Category category = CategoryHome.findByPrimaryKey( form.getIdCategory( ) );
-
-            List<Slot> listSlots = AppointmentSlotUtil.getAllSlots( form, localDateTime, appointment.getNbBookedSeats( ) );
-            List<Slot> listSlotsFromCategory = new ArrayList<>( );
-            if ( category != null )
-            {
-                List<AppointmentFormDTO> listForm = FormService.buildAllActiveAppointmentForm( );
-
-                List<AppointmentFormDTO> listFormFilteredCategory = listForm.stream( ).filter( f -> f.getIdCategory( ) == category.getIdCategory( ) )
-                        .collect( Collectors.toList( ) );
-
-                for ( AppointmentFormDTO formFilteredCategory : listFormFilteredCategory )
-                {
-                    listSlotsFromCategory.addAll( AppointmentSlotUtil.getAllSlots( formFilteredCategory, localDateTime, appointment.getNbBookedSeats( ) ) );
-                }
-            }
-
-            AppointmentForm appointmentForm = new AppointmentForm( form, category );
-            ResourceHistory resourceHist = _resourceHistoryService.getLastHistoryResource( appointment.getIdAppointment( ),
-                    Appointment.APPOINTMENT_RESOURCE_TYPE, form.getIdWorkflow( ) );
-            if ( resourceHist != null )
-            {
-                action = ( resourceHist.getAction( ).isAutomaticReflexiveAction( ) ) ? resourceHist.getAction( ) : null;
-                stateAppointment = resourceHist.getAction( ).getStateAfter( );
-            }
-            else
-            {
-                stateAppointment = AppointmentSlotUtil.getState( appointment.getIdAppointment( ), form.getIdWorkflow( ) );
-            }
-
-            AppointmentDataObject apptData = new AppointmentDataObject( appointment, stateAppointment, action, listSlots, listSlotsFromCategory, localDateTime,
-                    appointmentForm );
-
-            AppointmentDataHistory appointmentDataHistoryAvailability = new AppointmentDataHistory( );
-            appointmentDataHistoryAvailability.setDataType( "TimeUntilAvailability" );
-            appointmentDataHistoryAvailability.setDataValue( String.valueOf( apptData.getTimeUntilAvailability( ) ) );
-            appointmentDataHistoryAvailability.setIdRessource( apptData.getId( ) );
-            AppointmentDataHistoryHome.create( appointmentDataHistoryAvailability );
-
-            AppointmentDataHistory appointmentDataHistoryCategoryAvailability = new AppointmentDataHistory( );
-            appointmentDataHistoryCategoryAvailability.setDataType( "TimeUntilCategoryAvailability" );
-            appointmentDataHistoryCategoryAvailability.setDataValue( String.valueOf( apptData.getTimeUntilCategoryAvailability( ) ) );
-            appointmentDataHistoryCategoryAvailability.setIdRessource( apptData.getId( ) );
-            AppointmentDataHistoryHome.create( appointmentDataHistoryCategoryAvailability );
-
-            DataSourceService.processIncrementalIndexing( this, apptData );
-        }
-        catch( ElasticClientException e )
-        {
-            AppLogService.error( "Error during ElasticDataAppointmentListener rindexing appointment: " + e.getMessage( ), e );
-        }
-    }
-
-    @Override
-    public void notifyAppointmentRemoval( int nIdAppointment )
-    {
-        try
-        {
-            DataSourceService.deleteById( this, AppointmentSlotUtil.getAppointmentId( nIdAppointment, AppointmentSlotUtil.INSTANCE_NAME ) );
-        }
-        catch( ElasticClientException e )
-        {
-            AppLogService.error( "Error during ElasticDataAppointmentListener remove appointment: " + e.getMessage( ), e );
-        }
-
-    }
-
-    @Override
-    public String appointmentDateChanged( int nIdAppointment, List<Integer> listIdSlot, Locale locale )
-    {
-        reindexAppointment( nIdAppointment );
-        return null;
-    }
-
-    @Override
-    public void notifyAppointmentCreated( int nIdAppointment )
-    {
-        reindexAppointment( nIdAppointment );
-
-    }
-
-    @Override
-    public void notifyAppointmentUpdated( int nIdAppointment )
-    {
-
-    }
-
-    @Override
-    public void notifyAppointmentWFActionTriggered( int nIdAppointment, int nIdAction )
-    {
-
-        Appointment appt = AppointmentService.findAppointmentById( nIdAppointment );
-        Action action = _actionService.findByPrimaryKey( nIdAction );
-
-        AppointmentPartialDataObject appPartialData = new AppointmentPartialDataObject( appt, action.getStateAfter( ), action );
-
-        try
-        {
-            DataSourceService.partialUpdate( this, appPartialData.getId( ), appPartialData );
-        }
-        catch( ElasticClientException e )
-        {
-            AppLogService.error( "Error during ElasticDataAppointmentListener update partial appointment: " + e.getMessage( ), e );
-        }
-
-    }
+    
 }
+

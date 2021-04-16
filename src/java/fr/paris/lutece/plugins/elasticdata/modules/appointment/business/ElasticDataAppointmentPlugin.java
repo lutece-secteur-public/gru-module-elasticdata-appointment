@@ -39,7 +39,10 @@ import java.util.Locale;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.dozer.converters.DateConverter;
 
+import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.listener.AppointmentServiceListener;
+import fr.paris.lutece.portal.service.event.ResourceEventManager;
 import fr.paris.lutece.portal.service.plugin.Plugin;
+import fr.paris.lutece.portal.service.spring.SpringContextService;
 
 /**
  * ElasticDataAppointment Plugin
@@ -53,6 +56,8 @@ public final class ElasticDataAppointmentPlugin extends Plugin
      * Name of the ElasticDataAppointment plugin
      */
     public static final String PLUGIN_NAME = "elasticdata-appointment";
+    public static final String BEAN_APPOINTMENT_EVENT_LISTENER = "elasticdata-appointment.appointmentServiceListener";
+
 
     /**
      * {@inheritDoc}
@@ -60,8 +65,15 @@ public final class ElasticDataAppointmentPlugin extends Plugin
     @Override
     public void init( )
     {
+    	 AppointmentServiceListener appointmentServiceListener= SpringContextService.getBean( BEAN_APPOINTMENT_EVENT_LISTENER );
+         if( appointmentServiceListener != null ) {
+         	
+         	ResourceEventManager.register( appointmentServiceListener );
+         }
         BeanUtilsBean.getInstance( ).getConvertUtils( )
                 .register( new DateConverter( DateFormat.getDateInstance( DateFormat.SHORT, getPluginLocale( Locale.FRANCE ) ) ), java.sql.Date.class );
+       
+
     }
 
     /**
@@ -73,6 +85,6 @@ public final class ElasticDataAppointmentPlugin extends Plugin
      */
     public static Locale getPluginLocale( Locale locale )
     {
-        return Locale.FRANCE;
+        return locale;
     }
 }

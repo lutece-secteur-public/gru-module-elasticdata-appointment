@@ -33,156 +33,32 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.service;
 
-import fr.paris.lutece.plugins.appointment.service.AppointmentService;
-import fr.paris.lutece.plugins.appointment.web.dto.AppointmentDTO;
-import fr.paris.lutece.plugins.appointment.business.appointment.Appointment;
 import fr.paris.lutece.plugins.appointment.business.appointment.AppointmentHome;
-import fr.paris.lutece.plugins.appointment.business.form.Form;
-import fr.paris.lutece.plugins.appointment.business.form.FormHome;
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataSource;
 import fr.paris.lutece.plugins.elasticdata.business.DataObject;
-import fr.paris.lutece.plugins.elasticdata.business.DataSource;
-import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentHistoryDataObject;
-import fr.paris.lutece.plugins.elasticdata.service.DataSourceService;
-import fr.paris.lutece.plugins.libraryelastic.util.ElasticClientException;
-import fr.paris.lutece.plugins.workflowcore.business.resource.ResourceHistory;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
-import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
-import fr.paris.lutece.plugins.workflowcore.service.resource.ResourceHistoryService;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 
 /**
  * AppointmentHistoryDataSource
  */
 public class AppointmentHistoryDataSource extends AbstractDataSource
 {
-    @Override
-    public Collection<DataObject> fetchDataObjects( )
-    {
-        ArrayList<DataObject> collResult = new ArrayList<>( );
-        List<Form> listForm = FormHome.findActiveForms( );
-        for ( Form form : listForm )
-        {
-            List<Appointment> listAppointment = AppointmentService.findListAppointmentByIdForm( form.getIdForm( ) );
-            listAppointment.parallelStream( ).forEach( appointment -> {
+	@Inject
+	IResourceHistoryService _resourceHistoryService ;
 
-                collResult.addAll( getResourceHistoryList( appointment, form ) );
+	@Override
+	public List<String> getIdDataObjects() {
+		
+		return AppointmentHome.selectAllAppointmentId( ).stream().map( String::valueOf ).collect(Collectors.toList());
+	}
 
-            } );
-        }
-        return collResult;
-    }
-
-    /**
-     * Create a form response object
-     * 
-     * @param appointment
-     *            The Appointment
-     * @param form
-     *            The Form
-     * @return The form response object
-     */
-    public List<AppointmentHistoryDataObject> getResourceHistoryList( Appointment appointment, Form form )
-    {
-
-        List<AppointmentHistoryDataObject> appointmentHistoryList = new ArrayList<>( );
-        IResourceHistoryService _resourceHistoryService = SpringContextService.getBean( ResourceHistoryService.BEAN_SERVICE );
-        List<ResourceHistory> listResourceHistory = _resourceHistoryService.getAllHistoryByResource( appointment.getIdAppointment( ), "appointment",
-                form.getIdWorkflow( ) );
-        List<ResourceHistory> listResourceHistorySorted = listResourceHistory.stream( ).sorted( Comparator.comparing( ResourceHistory::getId ) )
-                .collect( Collectors.toList( ) );
-
-        Timestamp appointmentCreation = appointment.getAppointmentTakenSqlDate( );
-        Timestamp appointmentPreviousActionCreation = appointmentCreation;
-
-        for ( ResourceHistory resourceHistory : listResourceHistorySorted )
-        {
-
-            long lTaskDuration = duration( appointmentPreviousActionCreation, resourceHistory.getCreationDate( ) );
-            long lAppointmentDuration = duration( appointmentCreation, resourceHistory.getCreationDate( ) );
-
-            AppointmentHistoryDataObject appointmentHistoryDataObject = new AppointmentHistoryDataObject( resourceHistory.getId( ) );
-            appointmentHistoryDataObject.setFormName( form.getTitle( ) );
-            appointmentHistoryDataObject.setFormId( form.getIdForm( ) );
-            appointmentHistoryDataObject.setAppointmentId( AppointmentSlotUtil.INSTANCE_NAME + "_" + appointment.getIdAppointment( ) );
-            appointmentHistoryDataObject.setTimestamp( resourceHistory.getCreationDate( ).getTime( ) );
-            appointmentHistoryDataObject.setTaskDuration( lTaskDuration );
-            appointmentHistoryDataObject.setAppointmentDuration( lAppointmentDuration );
-            appointmentHistoryDataObject.setActionName( resourceHistory.getAction( ).getName( ) );
-
-            appointmentPreviousActionCreation = resourceHistory.getCreationDate( );
-
-            appointmentHistoryList.add( appointmentHistoryDataObject );
-
-        }
-
-        return appointmentHistoryList;
-    }
-
-    /**
-     * Index Form Response data object to Elasticdata
-     * 
-     * @param nIdResource
-     *            The Appointment id
-     * @param nIdTask
-     *            The Form
-     */
-    public void indexDocument( int nIdResource, int nIdTask )
-    {
-        Appointment appointment = AppointmentHome.findByPrimaryKey( nIdResource );
-        AppointmentDTO appointmentDTO = AppointmentService.buildAppointmentDTOFromIdAppointment( nIdResource );
-        Form form = FormHome.findByPrimaryKey( appointmentDTO.getIdForm( ) );
-        try
-        {
-            // Force init data sources of ElasticData plugin
-            DataSourceService.getDataSources( );
-            DataSource source = DataSourceService.getDataSource( "AppointmentHistoryDataSource" );
-            List<AppointmentHistoryDataObject> appointmentHistoryList = getResourceHistoryList( appointment, form );
-            for ( AppointmentHistoryDataObject appointmentHistoryDataObject : appointmentHistoryList )
-            {
-                DataSourceService.processIncrementalIndexing( source, appointmentHistoryDataObject );
-            }
-        }
-        catch( ElasticClientException e )
-        {
-            AppLogService.error( "Unable to process incremental indexing of idRessource :" + nIdResource, e );
-        }
-        catch( NullPointerException e )
-        {
-            AppLogService.error( "Unable to get AppointmentHistoryDataSource :" + nIdResource, e );
-        }
-    }
-
-    /**
-     * return The duration in milli
-     * 
-     * @param start
-     *            The start time.
-     * @param end
-     *            The end time.
-     * @return The duration in milli
-     */
-    private static long duration( java.sql.Timestamp start, java.sql.Timestamp end )
-    {
-        long milliseconds1 = start.getTime( );
-        long milliseconds2 = end.getTime( );
-        long diff = milliseconds2 - milliseconds1;
-        return diff;
-    }
-
-    public static <T> Predicate<T> distinctByKey( Function<? super T, Object> keyExtractor )
-    {
-        Map<Object, Boolean> map = new ConcurrentHashMap<>( );
-        return t -> map.putIfAbsent( keyExtractor.apply( t ), Boolean.TRUE ) == null;
-    }
+	@Override
+	public List<DataObject> getDataObjects(List<String> listIdDataObjects) {
+				   	
+		return IndexingAppointmentService.getService().buildHistoryWfDataObjects(listIdDataObjects.stream().map( Integer::parseInt ).collect(Collectors.toList()));
+	}
+	
 }

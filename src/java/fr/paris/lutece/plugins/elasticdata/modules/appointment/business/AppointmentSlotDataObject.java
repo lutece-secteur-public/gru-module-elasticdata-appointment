@@ -34,11 +34,9 @@
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.business;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -71,8 +69,7 @@ public class AppointmentSlotDataObject extends AbstractDataObject
      * @param demand
      *            The appointment
      */
-    public AppointmentSlotDataObject( AppointmentFormDTO appointmentFormDto, Slot appointmentSlot, String instanceName, List<Slot> listSlots,
-            LocalDateTime localDate, Category category )
+    public AppointmentSlotDataObject( AppointmentFormDTO appointmentFormDto, Slot appointmentSlot, String instanceName,  Category category )
     {
         super( );
         if ( appointmentFormDto != null && appointmentSlot != null )
