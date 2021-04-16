@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020, City of Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,15 +43,15 @@ import fr.paris.lutece.plugins.elasticdata.business.DataObject;
  * Data source for appointment
  */
 public class AppointmentDataSource extends AbstractDataSource
-{    
+{
     /**
      * {@inheritDoc}
      */
     @Override
     public List<String> getIdDataObjects( )
-    {      
-    	return AppointmentHome.selectAllAppointmentId( ).stream().map(intNumber -> String.valueOf( intNumber)).collect(Collectors.toList());
-    	
+    {
+        return AppointmentHome.selectAllAppointmentId( ).stream( ).map( intNumber -> String.valueOf( intNumber ) ).collect( Collectors.toList( ) );
+
     }
 
     /**
@@ -59,10 +59,9 @@ public class AppointmentDataSource extends AbstractDataSource
      */
     @Override
     public List<DataObject> getDataObjects( List<String> idList )
-    {   	
-        List<Integer>  listIdDataObject=idList.stream().map( Integer::parseInt ).collect(Collectors.toList());
-        return IndexingAppointmentService.getService().buildDataObjects( listIdDataObject );
+    {
+        List<Integer> listIdDataObject = idList.stream( ).map( Integer::parseInt ).collect( Collectors.toList( ) );
+        return IndexingAppointmentService.getService( ).buildDataObjects( listIdDataObject );
     }
-    
-}
 
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020, City of Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,46 +51,50 @@ import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.Appointm
 /**
  * Data source for appointment
  */
-public class AppointmentSlotDataSource extends AbstractDataSource 
+public class AppointmentSlotDataSource extends AbstractDataSource
 {
 
-	/**
+    /**
      * {@inheritDoc}
      */
-	@Override
-	public List<String> getIdDataObjects() {
-		
-		return FormService.findAllForms().stream().map(form -> String.valueOf(form.getIdForm())).collect(Collectors.toList());
-	}
-	/**
+    @Override
+    public List<String> getIdDataObjects( )
+    {
+
+        return FormService.findAllForms( ).stream( ).map( form -> String.valueOf( form.getIdForm( ) ) ).collect( Collectors.toList( ) );
+    }
+
+    /**
      * {@inheritDoc}
      */
-	@Override
-	public List<DataObject> getDataObjects(List<String> listIdDataObjects) {
-		
-		this.setBatchSize( BATCH_SIZE );
-		List<DataObject> collResult = new ArrayList< >( );
-		for(String strIdForm: listIdDataObjects) {
-			
-			AppointmentFormDTO appointmentForm =FormService.buildAppointmentFormWithoutReservationRule(Integer.parseInt( strIdForm ));
-			Category category = CategoryHome.findByPrimaryKey( appointmentForm.getIdCategory( ) );
-			 List<Slot> listSlots = AppointmentSlotUtil.getAllSlotsToFullIndexing( appointmentForm );
-	        for ( Slot appointmentSlot : listSlots )
-	        {
-	            collResult.add(
-	                    new AppointmentSlotDataObject( appointmentForm, appointmentSlot, AppointmentSlotUtil.INSTANCE_NAME,  category ) );
-	
-	        }
-		}
+    @Override
+    public List<DataObject> getDataObjects( List<String> listIdDataObjects )
+    {
+
+        this.setBatchSize( BATCH_SIZE );
+        List<DataObject> collResult = new ArrayList<>( );
+        for ( String strIdForm : listIdDataObjects )
+        {
+
+            AppointmentFormDTO appointmentForm = FormService.buildAppointmentFormWithoutReservationRule( Integer.parseInt( strIdForm ) );
+            Category category = CategoryHome.findByPrimaryKey( appointmentForm.getIdCategory( ) );
+            List<Slot> listSlots = AppointmentSlotUtil.getAllSlotsToFullIndexing( appointmentForm );
+            for ( Slot appointmentSlot : listSlots )
+            {
+                collResult.add( new AppointmentSlotDataObject( appointmentForm, appointmentSlot, AppointmentSlotUtil.INSTANCE_NAME, category ) );
+
+            }
+        }
         return collResult;
-	}
-	@Override
-	public Iterator<DataObject> getDataObjectsIterator( )
-	{
-	     List<String> listIdDataObject= this.getIdDataObjects( );
-	     this.getIndexingStatus().setnNbTotalObj(listIdDataObject.size( ));
-	     this.setBatchSize( 1 );
-	     return new BatchDataObjectsIterator( this, listIdDataObject );
-	 }
-   
+    }
+
+    @Override
+    public Iterator<DataObject> getDataObjectsIterator( )
+    {
+        List<String> listIdDataObject = this.getIdDataObjects( );
+        this.getIndexingStatus( ).setnNbTotalObj( listIdDataObject.size( ) );
+        this.setBatchSize( 1 );
+        return new BatchDataObjectsIterator( this, listIdDataObject );
+    }
+
 }

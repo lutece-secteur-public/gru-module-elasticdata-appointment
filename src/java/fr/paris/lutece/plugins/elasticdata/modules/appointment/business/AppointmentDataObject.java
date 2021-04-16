@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020, City of Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -74,14 +74,14 @@ public class AppointmentDataObject extends AbstractDataObject
         _nNbPlaces = appointment.getNbPlaces( );
         _bIsCancelled = appointment.getIsCancelled( );
         _strNameInstance = AppointmentSlotUtil.INSTANCE_NAME;
-        _bIsFront = StringUtils.isEmpty( appointment.getAdminUserCreate( ));
+        _bIsFront = StringUtils.isEmpty( appointment.getAdminUserCreate( ) );
         _appointmentForm = appointmentForm;
-          
+
         if ( stateAppointment != null )
         {
             _strState = stateAppointment.getName( );
         }
-        setTimestamp( Timestamp.valueOf( AppointmentUtilities.getStartingDateTime( appointment ) ).getTime( ));
+        setTimestamp( Timestamp.valueOf( AppointmentUtilities.getStartingDateTime( appointment ) ).getTime( ) );
     }
 
     /**
@@ -273,8 +273,6 @@ public class AppointmentDataObject extends AbstractDataObject
         _appointmentForm = appointmentForm;
     }
 
-    
-
     /**
      * Returns the created timestamp
      * 
@@ -314,6 +312,6 @@ public class AppointmentDataObject extends AbstractDataObject
      */
     public void setAdminCreator( boolean bIsFront )
     {
-    	_bIsFront = bIsFront;
+        _bIsFront = bIsFront;
     }
 }

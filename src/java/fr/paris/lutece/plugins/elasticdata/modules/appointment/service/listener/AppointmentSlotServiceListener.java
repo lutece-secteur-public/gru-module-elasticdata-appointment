@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020, City of Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,78 +53,85 @@ import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.IndexingS
  */
 public class AppointmentSlotServiceListener implements IFormListener, ISlotListener, IWeekDefinitionListener
 {
-	@Inject
-	private AppointmentSlotDataSource _appointmentSlotDataSource;
+    @Inject
+    private AppointmentSlotDataSource _appointmentSlotDataSource;
 
-     
     @Override
-    public void notifyListWeeksChanged(int nIdForm, List<WeekDefinition> listWeek) 
+    public void notifyListWeeksChanged( int nIdForm, List<WeekDefinition> listWeek )
     {
-    	WeekDefinition weekWithDateMin = listWeek.stream( ).min( Comparator.comparing( WeekDefinition::getDateOfApply ) ).orElse( null );
-		WeekDefinition weekWithDateMax = listWeek.stream( ).max( Comparator.comparing( WeekDefinition::getEndingDateOfApply ) ).orElse( null );
-	
-		IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdForm ), weekWithDateMin.getDateOfApply(), weekWithDateMax.getEndingDateOfApply( ) );
+        WeekDefinition weekWithDateMin = listWeek.stream( ).min( Comparator.comparing( WeekDefinition::getDateOfApply ) ).orElse( null );
+        WeekDefinition weekWithDateMax = listWeek.stream( ).max( Comparator.comparing( WeekDefinition::getEndingDateOfApply ) ).orElse( null );
+
+        IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdForm ),
+                weekWithDateMin.getDateOfApply( ), weekWithDateMax.getEndingDateOfApply( ) );
 
     }
 
     @Override
-	public void notifyWeekAssigned(WeekDefinition weekDefinition) {
+    public void notifyWeekAssigned( WeekDefinition weekDefinition )
+    {
 
-    	ReservationRule reservationRule = ReservationRuleService.findReservationRuleById( weekDefinition.getIdReservationRule( ) );
-    	IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( reservationRule.getIdForm( ) ), weekDefinition.getDateOfApply(), weekDefinition.getEndingDateOfApply( ) );
+        ReservationRule reservationRule = ReservationRuleService.findReservationRuleById( weekDefinition.getIdReservationRule( ) );
+        IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource,
+                FormService.buildAppointmentFormWithoutReservationRule( reservationRule.getIdForm( ) ), weekDefinition.getDateOfApply( ),
+                weekDefinition.getEndingDateOfApply( ) );
 
     }
 
     @Override
-	public void notifyWeekUnassigned (WeekDefinition weekDefinition ) 
+    public void notifyWeekUnassigned( WeekDefinition weekDefinition )
     {
-    	notifyWeekAssigned( weekDefinition );
+        notifyWeekAssigned( weekDefinition );
 
     }
 
     @Override
     public void notifySlotChange( int nIdSlot )
     {
-    	IndexingSlotService.indexSlot( nIdSlot, _appointmentSlotDataSource );
+        IndexingSlotService.indexSlot( nIdSlot, _appointmentSlotDataSource );
     }
 
     @Override
     public void notifySlotCreation( int nIdSlot )
     {
-    	notifySlotChange(  nIdSlot );
+        notifySlotChange( nIdSlot );
     }
+
     @Override
-	public void notifySlotRemoval(Slot slot) 
-    {        
-    	IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( slot.getIdForm( ) ), slot.getEndingDateTime().toLocalDate( ) , slot.getEndingDateTime().toLocalDate() );
+    public void notifySlotRemoval( Slot slot )
+    {
+        IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( slot.getIdForm( ) ),
+                slot.getEndingDateTime( ).toLocalDate( ), slot.getEndingDateTime( ).toLocalDate( ) );
 
     }
-	@Override
-	public void notifySlotEndingTimeHasChanged(int nIdSlot, int nIdFom, LocalDateTime endingDateTime) {
-      
-		IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdFom ), endingDateTime.toLocalDate( ) , endingDateTime.toLocalDate() );
 
-	}
+    @Override
+    public void notifySlotEndingTimeHasChanged( int nIdSlot, int nIdFom, LocalDateTime endingDateTime )
+    {
+
+        IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdFom ),
+                endingDateTime.toLocalDate( ), endingDateTime.toLocalDate( ) );
+
+    }
+
     @Override
     public void notifyFormChange( int nIdForm )
     {
-    	IndexingSlotService.indexForm( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdForm ) );
+        IndexingSlotService.indexForm( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdForm ) );
 
     }
 
     @Override
     public void notifyFormCreation( int nIdForm )
     {
-    	IndexingSlotService.indexForm( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdForm ) );
+        IndexingSlotService.indexForm( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdForm ) );
 
     }
 
     @Override
     public void notifyFormRemoval( int nIdForm )
     {
-    	IndexingSlotService.deleteSlotsForm( _appointmentSlotDataSource, nIdForm);
+        IndexingSlotService.deleteSlotsForm( _appointmentSlotDataSource, nIdForm );
     }
 
-  
-   
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020, City of Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -163,6 +163,7 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
     {
         _lAppointmentDuration = lAppointmentDuration;
     }
+
     /**
      * Returns the Duration between appointment date and action date
      * 
@@ -181,7 +182,7 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
      */
     public void setAppointmentDateActionDateDuration( long lAppointmentDateActionDateDuration )
     {
-    	_lAppointmentDateActionDateDuration = lAppointmentDateActionDateDuration;
+        _lAppointmentDateActionDateDuration = lAppointmentDateActionDateDuration;
     }
 
     /**
@@ -246,24 +247,25 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
     {
         _strActionName = strActionName;
     }
-    /**
-    *
-    * @return the creation date
-    */
-   public Timestamp getCreationDate( )
-   {
-       return _tCreationDate;
-   }
 
-   /**
-    * set the creation date
-    * 
-    * @param dateCreation
-    *            the creation date
-    */
-   public void setCreationDate( Timestamp dateCreation )
-   {
-       _tCreationDate = dateCreation;
-   }
+    /**
+     *
+     * @return the creation date
+     */
+    public Timestamp getCreationDate( )
+    {
+        return _tCreationDate;
+    }
+
+    /**
+     * set the creation date
+     * 
+     * @param dateCreation
+     *            the creation date
+     */
+    public void setCreationDate( Timestamp dateCreation )
+    {
+        _tCreationDate = dateCreation;
+    }
 
 }

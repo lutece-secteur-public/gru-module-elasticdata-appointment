@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020, City of Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -123,15 +123,15 @@ public final class AppointmentSlotUtil
     public static List<Slot> getAllSlots( AppointmentFormDTO appointmentForm, int nNbPlacesToTake )
     {
         int idForm = appointmentForm.getIdForm( );
-        LocalDate startingDateOfDisplay=LocalDate.now( );
+        LocalDate startingDateOfDisplay = LocalDate.now( );
         Display display = DisplayService.findDisplayWithFormId( idForm );
         // Get the nb weeks to display
         int nNbWeeksToDisplay = display.getNbWeeksToDisplay( );
-        if( appointmentForm.getDateStartValidity() != null && startingDateOfDisplay.isBefore( appointmentForm.getDateStartValidity().toLocalDate() ))
+        if ( appointmentForm.getDateStartValidity( ) != null && startingDateOfDisplay.isBefore( appointmentForm.getDateStartValidity( ).toLocalDate( ) ) )
         {
-        	startingDateOfDisplay= appointmentForm.getDateStartValidity().toLocalDate();
+            startingDateOfDisplay = appointmentForm.getDateStartValidity( ).toLocalDate( );
         }
-        
+
         // Calculate the ending date of display with the nb weeks to display
         // since today
         // We calculate the number of weeks including the current week, so it
@@ -148,12 +148,11 @@ public final class AppointmentSlotUtil
         {
             endingDateOfDisplay = endingValidityDate;
         }
-        
-        Map<WeekDefinition, ReservationRule> mapReservationRule = ReservationRuleService.findAllReservationRule( idForm, WeekDefinitionService.findListWeekDefinition( idForm ) );
-        return SlotService.buildListSlot( idForm, mapReservationRule, startingDateOfDisplay,
-            		endingDateOfDisplay, nNbPlacesToTake );
-        
-        
+
+        Map<WeekDefinition, ReservationRule> mapReservationRule = ReservationRuleService.findAllReservationRule( idForm,
+                WeekDefinitionService.findListWeekDefinition( idForm ) );
+        return SlotService.buildListSlot( idForm, mapReservationRule, startingDateOfDisplay, endingDateOfDisplay, nNbPlacesToTake );
+
     }
 
     /**
@@ -163,7 +162,7 @@ public final class AppointmentSlotUtil
      *            the appointment form
      * @return all the slots of a form
      */
-     public static List<Slot> getAllSlots( AppointmentFormDTO appointmentForm )
+    public static List<Slot> getAllSlots( AppointmentFormDTO appointmentForm )
     {
         Display display = DisplayService.findDisplayWithFormId( appointmentForm.getIdForm( ) );
         // Get the nb weeks to display
@@ -172,10 +171,10 @@ public final class AppointmentSlotUtil
         // since today
         // We calculate the number of weeks including the current week, so it
         // will end to the (n) next sunday
-        LocalDate startingDateOfDisplay=LocalDate.now( );
-        if( appointmentForm.getDateStartValidity() != null && startingDateOfDisplay.isBefore( appointmentForm.getDateStartValidity().toLocalDate() ))
+        LocalDate startingDateOfDisplay = LocalDate.now( );
+        if ( appointmentForm.getDateStartValidity( ) != null && startingDateOfDisplay.isBefore( appointmentForm.getDateStartValidity( ).toLocalDate( ) ) )
         {
-        	startingDateOfDisplay= appointmentForm.getDateStartValidity().toLocalDate();
+            startingDateOfDisplay = appointmentForm.getDateStartValidity( ).toLocalDate( );
         }
         TemporalField fieldISO = WeekFields.of( LocaleService.getDefault( ) ).dayOfWeek( );
         LocalDate dateOfSunday = startingDateOfDisplay.with( fieldISO, DayOfWeek.SUNDAY.getValue( ) );
@@ -191,39 +190,41 @@ public final class AppointmentSlotUtil
         }
 
         return SlotService.buildListSlot( appointmentForm.getIdForm( ), WeekDefinitionService.findAllWeekDefinition( appointmentForm.getIdForm( ) ),
-        		startingDateOfDisplay, endingDateOfDisplay );
+                startingDateOfDisplay, endingDateOfDisplay );
     }
 
-     /**
-      * Get all the slots of a form by calling the method buildListSlot of the plugin RDV
-      * 
-      * @param appointmentForm
-      *            the appointment form
-      * @return all the slots of a form
-      */
-      public static List<Slot> getAllSlotsToFullIndexing( AppointmentFormDTO appointmentForm )
-     {
-         Display display = DisplayService.findDisplayWithFormId( appointmentForm.getIdForm( ) );
-         // Get the nb weeks to display
-         LocalDate startingDateOfDisplay=LocalDate.now( );
-         if( appointmentForm.getDateStartValidity() != null )
-         {
-         	startingDateOfDisplay= appointmentForm.getDateStartValidity().toLocalDate();
-         }
-         LocalDate endingDateOfDisplay = startingDateOfDisplay.with( WeekFields.of( LocaleService.getDefault( ) ).dayOfWeek( ), DayOfWeek.SUNDAY.getValue( ) ).plusWeeks( display.getNbWeeksToDisplay( ) - 1L );
-         LocalDate endingValidityDate = null;
-         if ( appointmentForm.getDateEndValidity( ) != null )
-         {
-             endingValidityDate = appointmentForm.getDateEndValidity( ).toLocalDate( );
-         }
-         if ( endingValidityDate != null && endingDateOfDisplay.isAfter( endingValidityDate ) )
-         {
-             endingDateOfDisplay = endingValidityDate;
-         }
-         HashMap<LocalDate, WeekDefinition> mapWeekDefinition = WeekDefinitionService.findAllWeekDefinition( appointmentForm.getIdForm( ));
-         WeekDefinition week= mapWeekDefinition.values( ).stream().min(Comparator.comparing(WeekDefinition::getDateOfApply)).orElseThrow(NoSuchElementException::new);
-         return SlotService.buildListSlot( appointmentForm.getIdForm( ), mapWeekDefinition, week.getDateOfApply( ), endingDateOfDisplay );
-     }
+    /**
+     * Get all the slots of a form by calling the method buildListSlot of the plugin RDV
+     * 
+     * @param appointmentForm
+     *            the appointment form
+     * @return all the slots of a form
+     */
+    public static List<Slot> getAllSlotsToFullIndexing( AppointmentFormDTO appointmentForm )
+    {
+        Display display = DisplayService.findDisplayWithFormId( appointmentForm.getIdForm( ) );
+        // Get the nb weeks to display
+        LocalDate startingDateOfDisplay = LocalDate.now( );
+        if ( appointmentForm.getDateStartValidity( ) != null )
+        {
+            startingDateOfDisplay = appointmentForm.getDateStartValidity( ).toLocalDate( );
+        }
+        LocalDate endingDateOfDisplay = startingDateOfDisplay.with( WeekFields.of( LocaleService.getDefault( ) ).dayOfWeek( ), DayOfWeek.SUNDAY.getValue( ) )
+                .plusWeeks( display.getNbWeeksToDisplay( ) - 1L );
+        LocalDate endingValidityDate = null;
+        if ( appointmentForm.getDateEndValidity( ) != null )
+        {
+            endingValidityDate = appointmentForm.getDateEndValidity( ).toLocalDate( );
+        }
+        if ( endingValidityDate != null && endingDateOfDisplay.isAfter( endingValidityDate ) )
+        {
+            endingDateOfDisplay = endingValidityDate;
+        }
+        HashMap<LocalDate, WeekDefinition> mapWeekDefinition = WeekDefinitionService.findAllWeekDefinition( appointmentForm.getIdForm( ) );
+        WeekDefinition week = mapWeekDefinition.values( ).stream( ).min( Comparator.comparing( WeekDefinition::getDateOfApply ) )
+                .orElseThrow( NoSuchElementException::new );
+        return SlotService.buildListSlot( appointmentForm.getIdForm( ), mapWeekDefinition, week.getDateOfApply( ), endingDateOfDisplay );
+    }
 
     /**
      * Get the state of appointment
@@ -254,6 +255,7 @@ public final class AppointmentSlotUtil
 
         return sbuilder.toString( );
     }
+
     /**
      * build query for delete a document into elastic-search
      * 
@@ -261,9 +263,10 @@ public final class AppointmentSlotUtil
      *            the Id form
      * @return delete query
      */
-    public static String buildQueryDateRange( int idForm,  long startingDate, long endingDate )
+    public static String buildQueryDateRange( int idForm, long startingDate, long endingDate )
     {
-    		return "{\"query\": {\"bool\": {\"must\": [ { \"term\": { \"appointmentForm.idForms\":" + idForm + "}},{ \"range\": {\"timestamp\":{\"from\":"+startingDate+",\"to\":"+ endingDate +"}}}]}}}";
+        return "{\"query\": {\"bool\": {\"must\": [ { \"term\": { \"appointmentForm.idForms\":" + idForm + "}},{ \"range\": {\"timestamp\":{\"from\":"
+                + startingDate + ",\"to\":" + endingDate + "}}}]}}}";
     }
 
     /**
@@ -281,6 +284,7 @@ public final class AppointmentSlotUtil
 
         return sbuilder.toString( );
     }
+
     /**
      * 
      * @param apptData
@@ -293,7 +297,8 @@ public final class AppointmentSlotUtil
      *            The appointment form
      * @return AppointmentDataObject builded
      */
-    public static AppointmentDataObject buildAppointmentDataObject( AppointmentDataObject apptData, List<Slot> listSlots, LocalDateTime localTime, AppointmentForm appointmentForm )
+    public static AppointmentDataObject buildAppointmentDataObject( AppointmentDataObject apptData, List<Slot> listSlots, LocalDateTime localTime,
+            AppointmentForm appointmentForm )
     {
 
         long lSumNbPlacesBeforeAppointment;
@@ -313,7 +318,7 @@ public final class AppointmentSlotUtil
                 .filter( s -> s.getStartingDateTime( ).isBefore( startAppointment ) && s.getIsOpen( ) == Boolean.TRUE ).collect( Collectors.toList( ) );
 
         apptData.setTimeUntilAvailability( getTimeUntilAvailability( listAvailableSlots, localTime, startAppointment ) );
-        
+
         lSumNbPlacesBeforeAppointment = listAvailableSlots.stream( ).mapToLong( s -> s.getMaxCapacity( ) ).sum( );
         apptData.setSumNbPlacesBeforeAppointment( lSumNbPlacesBeforeAppointment );
 

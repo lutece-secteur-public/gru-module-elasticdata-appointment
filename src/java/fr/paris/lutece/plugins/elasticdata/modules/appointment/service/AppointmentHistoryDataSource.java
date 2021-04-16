@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020, City of Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,19 +46,22 @@ import javax.inject.Inject;
  */
 public class AppointmentHistoryDataSource extends AbstractDataSource
 {
-	@Inject
-	IResourceHistoryService _resourceHistoryService ;
+    @Inject
+    IResourceHistoryService _resourceHistoryService;
 
-	@Override
-	public List<String> getIdDataObjects() {
-		
-		return AppointmentHome.selectAllAppointmentId( ).stream().map( String::valueOf ).collect(Collectors.toList());
-	}
+    @Override
+    public List<String> getIdDataObjects( )
+    {
 
-	@Override
-	public List<DataObject> getDataObjects(List<String> listIdDataObjects) {
-				   	
-		return IndexingAppointmentService.getService().buildHistoryWfDataObjects(listIdDataObjects.stream().map( Integer::parseInt ).collect(Collectors.toList()));
-	}
-	
+        return AppointmentHome.selectAllAppointmentId( ).stream( ).map( String::valueOf ).collect( Collectors.toList( ) );
+    }
+
+    @Override
+    public List<DataObject> getDataObjects( List<String> listIdDataObjects )
+    {
+
+        return IndexingAppointmentService.getService( )
+                .buildHistoryWfDataObjects( listIdDataObjects.stream( ).map( Integer::parseInt ).collect( Collectors.toList( ) ) );
+    }
+
 }

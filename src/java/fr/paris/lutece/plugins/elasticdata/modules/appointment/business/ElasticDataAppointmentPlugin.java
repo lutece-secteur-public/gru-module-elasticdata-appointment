@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020, City of Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,21 +58,20 @@ public final class ElasticDataAppointmentPlugin extends Plugin
     public static final String PLUGIN_NAME = "elasticdata-appointment";
     public static final String BEAN_APPOINTMENT_EVENT_LISTENER = "elasticdata-appointment.appointmentServiceListener";
 
-
     /**
      * {@inheritDoc}
      */
     @Override
     public void init( )
     {
-    	 AppointmentServiceListener appointmentServiceListener= SpringContextService.getBean( BEAN_APPOINTMENT_EVENT_LISTENER );
-         if( appointmentServiceListener != null ) {
-         	
-         	ResourceEventManager.register( appointmentServiceListener );
-         }
+        AppointmentServiceListener appointmentServiceListener = SpringContextService.getBean( BEAN_APPOINTMENT_EVENT_LISTENER );
+        if ( appointmentServiceListener != null )
+        {
+
+            ResourceEventManager.register( appointmentServiceListener );
+        }
         BeanUtilsBean.getInstance( ).getConvertUtils( )
                 .register( new DateConverter( DateFormat.getDateInstance( DateFormat.SHORT, getPluginLocale( Locale.FRANCE ) ) ), java.sql.Date.class );
-       
 
     }
 

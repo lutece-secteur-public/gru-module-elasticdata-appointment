@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020, City of Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@ public class AppointmentPartialDataObject
 
         _strId = AppointmentSlotUtil.getAppointmentId( nIdAppointment, AppointmentSlotUtil.INSTANCE_NAME );
         _strState = stateAppointment.getName( );
-        
+
     }
 
     /**
@@ -75,7 +75,6 @@ public class AppointmentPartialDataObject
         _strId = nId;
     }
 
-   
     /**
      * Returns the State
      * 

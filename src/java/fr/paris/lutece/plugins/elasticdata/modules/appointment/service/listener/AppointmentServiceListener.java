@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2020, City of Paris
+ * Copyright (c) 2002-2021, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,73 +51,78 @@ import fr.paris.lutece.portal.business.event.ResourceEvent;
  */
 public class AppointmentServiceListener implements IAppointmentListener, IAppointmentWorkflowActionListener, EventRessourceListener
 {
- 
-	private static final String NAME= "APPOINTMENT_ELASTIC_DATA_LISTNER"; 
-	@Inject
-	private AppointmentDataSource _appointmentDataSource;
-	@Inject
-	private AppointmentHistoryDataSource _appointmentHistoryDataSource;
-	
+
+    private static final String NAME = "APPOINTMENT_ELASTIC_DATA_LISTNER";
+    @Inject
+    private AppointmentDataSource _appointmentDataSource;
+    @Inject
+    private AppointmentHistoryDataSource _appointmentHistoryDataSource;
 
     @Override
     public void notifyAppointmentRemoval( int nIdAppointment )
     {
-    	IndexingAppointmentService.getService( ).deleteAppointmentAndHistory(_appointmentDataSource, _appointmentHistoryDataSource, nIdAppointment);
+        IndexingAppointmentService.getService( ).deleteAppointmentAndHistory( _appointmentDataSource, _appointmentHistoryDataSource, nIdAppointment );
 
     }
 
     @Override
     public String appointmentDateChanged( int nIdAppointment, List<Integer> listIdSlot, Locale locale )
     {
-    	IndexingAppointmentService.getService( ).indexAppointment(_appointmentDataSource, nIdAppointment );
+        IndexingAppointmentService.getService( ).indexAppointment( _appointmentDataSource, nIdAppointment );
         return null;
     }
 
     @Override
     public void notifyAppointmentCreated( int nIdAppointment )
     {
-    	IndexingAppointmentService.getService( ).indexAppointment(_appointmentDataSource, nIdAppointment );
+        IndexingAppointmentService.getService( ).indexAppointment( _appointmentDataSource, nIdAppointment );
 
     }
 
     @Override
     public void notifyAppointmentUpdated( int nIdAppointment )
     {
-    	//update of functional data (name, tel...)
+        // update of functional data (name, tel...)
     }
 
     @Override
     public void notifyAppointmentWFActionTriggered( int nIdAppointment, int nIdAction )
     {
-    	//it's already called by  updatedResource(ResourceEvent event)
+        // it's already called by updatedResource(ResourceEvent event)
     }
 
-	@Override
-	public String getName() {
-		
-		return NAME;
-	}
+    @Override
+    public String getName( )
+    {
 
-	@Override
-	public void addedResource(ResourceEvent event) {
-		//listener on the actions of the workflow
-		// addition of the resource in the workflow_resource_workflow
-	}
+        return NAME;
+    }
 
-	@Override
-	public void deletedResource(ResourceEvent event) {
-		//listener on the actions of the workflow
-    	//it's already called by  notifyAppointmentRemoval( int nIdAppointment )
-		
-	}
+    @Override
+    public void addedResource( ResourceEvent event )
+    {
+        // listener on the actions of the workflow
+        // addition of the resource in the workflow_resource_workflow
+    }
 
-	@Override
-	public void updatedResource(ResourceEvent event) {
-		//listener on the actions of the workflow
-		if( event.getTypeResource().equals( Appointment.APPOINTMENT_RESOURCE_TYPE )) {		
-	    	IndexingAppointmentService.getService( ).indexAppointmentStateAndHistory( _appointmentDataSource, _appointmentHistoryDataSource,  Integer.parseInt(event.getIdResource( ) ) );
-		}
-		
-	}
-       
+    @Override
+    public void deletedResource( ResourceEvent event )
+    {
+        // listener on the actions of the workflow
+        // it's already called by notifyAppointmentRemoval( int nIdAppointment )
+
+    }
+
+    @Override
+    public void updatedResource( ResourceEvent event )
+    {
+        // listener on the actions of the workflow
+        if ( event.getTypeResource( ).equals( Appointment.APPOINTMENT_RESOURCE_TYPE ) )
+        {
+            IndexingAppointmentService.getService( ).indexAppointmentStateAndHistory( _appointmentDataSource, _appointmentHistoryDataSource,
+                    Integer.parseInt( event.getIdResource( ) ) );
+        }
+
+    }
+
 }
