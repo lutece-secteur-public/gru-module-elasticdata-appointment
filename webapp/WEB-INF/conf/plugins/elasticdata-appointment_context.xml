@@ -32,7 +32,6 @@
     <bean id="elasticdata-appointment.appointmentslotdataSource" class="fr.paris.lutece.plugins.elasticdata.modules.appointment.service.AppointmentSlotDataSource">
         <property name="id" value="AppointmentSlotDataSource" />
         <property name="name" value="Appointment Slot Data Source" />
-        <property name="batchSize" value="1" />
         <property name="targetIndexName" value="appointmentslotdatasource" />
         <property name="mappings">
             <value>
