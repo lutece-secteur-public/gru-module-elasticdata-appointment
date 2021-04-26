@@ -193,16 +193,13 @@ public class IndexingSlotService
                 {
                     try
                     {
-                        if ( _queueSlotToIndex.isEmpty( ) || _queueSlotToIndex.size( ) < _nBatchSize )
-                        {
-
-                            DataSourceService.processIncrementalIndexing( dataSource, builAppointmentSlotDataObject( nIdSlot ) );
-
-                        }
-                        else
-                        {
-                            indexListSlot( _queueSlotToIndex, nIdSlot, dataSource );
-                        }
+                    	Integer nIdresource= nIdSlot;
+                    	do {
+	                        
+                    		indexingSlot( nIdresource, dataSource );
+	                        nIdresource= _queueSlotToIndex.poll( );
+                       
+            	        }while( nIdresource != null );
                     }
                     catch( ElasticClientException e )
                     {
@@ -227,6 +224,28 @@ public class IndexingSlotService
 
                 _queueSlotToIndex.add( nIdSlot );
             }
+    }
+    /**
+     * Index the slot (and the related form to have the good number of available places) in elasticsearch
+     * 
+     * @param nIdSlot
+     *            the id slot
+     * @param dataSource
+     *            the data source
+     * @throws ElasticClientException the Exception
+     */
+    private static void indexingSlot( int nIdresource, DataSource dataSource  ) throws ElasticClientException {
+    	
+    	 if ( _queueSlotToIndex.isEmpty( ) || _queueSlotToIndex.size( ) < _nBatchSize )
+         {
+
+             DataSourceService.processIncrementalIndexing( dataSource, builAppointmentSlotDataObject( nIdresource ) );
+
+         }
+         else
+         {
+             indexListSlot( _queueSlotToIndex, nIdresource, dataSource );
+         }
     }
 
     /**

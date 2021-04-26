@@ -123,24 +123,14 @@ public class IndexingAppointmentService
                 public void run( )
                 {
                     try
-                    {
-                        if ( _queueAppointmentHistoryToIndex.isEmpty( ) || _queueAppointmentHistoryToIndex.size( ) < _nBatchSize )
-                        {
-                            Appointment appt = AppointmentService.findAppointmentById( nIdAppointment );
-                            appt.setSlot( SlotService.findListSlotByIdAppointment( appt.getIdAppointment( ) ) );
-                            Form form = FormService.findFormLightByPrimaryKey( appt.getSlot( ).get( 0 ).getIdForm( ) );
-                            AppointmentPartialDataObject appPartialData = new AppointmentPartialDataObject( nIdAppointment,
-                                    _stateService.findByResource( nIdAppointment, Appointment.APPOINTMENT_RESOURCE_TYPE, form.getIdWorkflow( ) ) );
-
-                            DataSourceService.partialUpdate( appointmentDataSource, appPartialData.getId( ), appPartialData );
-                            DataSourceService.processIncrementalIndexing( new StringBuilder( ), appointmentHistoryDataSource,
-                                    getResourceHistoryDataObject( nIdAppointment, appt, form ) );
-                        }
-                        else
-                        {
-                            indexListAppointmentAndHistory( appointmentDataSource, appointmentHistoryDataSource, _queueAppointmentHistoryToIndex,
-                                    nIdAppointment );
-                        }
+                    {	
+                    	Integer nIdresource= nIdAppointment;
+                    	do {
+                    		
+                    		indexingAppointmentStateAndHistory(  appointmentDataSource,  appointmentHistoryDataSource, nIdresource );
+	                        nIdresource= _queueAppointmentHistoryToIndex.poll( );
+	                        
+                    	}while( nIdresource != null );
                     }
                     catch( ElasticClientException e )
                     {
@@ -185,15 +175,14 @@ public class IndexingAppointmentService
                 {
                     try
                     {
-                        if ( _queueAppointmentToIndex.isEmpty( ) || _queueAppointmentToIndex.size( ) < _nBatchSize )
-                        {
-
-                            DataSourceService.processIncrementalIndexing( appointmentDataSource, builAppointmentDataObject( nIdAppointment ) );
-                        }
-                        else
-                        {
-                            indexListAppointment( appointmentDataSource, _queueAppointmentToIndex, nIdAppointment );
-                        }
+                    	Integer nIdresource= nIdAppointment;
+                	    do {
+                	    	
+                	    	indexingAppointment( appointmentDataSource, nIdresource );
+                            nIdresource= _queueAppointmentToIndex.poll( );
+                            
+                	    }while( nIdresource != null );
+                	    
                     }
                     catch( ElasticClientException e )
                     {
@@ -210,7 +199,6 @@ public class IndexingAppointmentService
                     }
                 }
             } ).start( );
-
         }
         else
             if ( !_queueAppointmentToIndex.contains( nIdAppointment ) )
@@ -308,6 +296,59 @@ public class IndexingAppointmentService
         return listResourceHistoryDataObject;
     }
 
+    /**
+     * index appointmentpartial data object and history data object
+     * 
+     * @param appointmentDataSource
+     *            the appointment DataSource
+     * @param appointmentHistoryDataSource
+     *            the appointment history DataSource
+     * @param nIdAppointment
+     *            the id of appointment to index
+     * @throws ElasticClientException the Exception
+     */
+    private void indexingAppointmentStateAndHistory( AppointmentDataSource appointmentDataSource, AppointmentHistoryDataSource appointmentHistoryDataSource,
+            int nIdresource ) throws ElasticClientException
+    {
+    	 if ( _queueAppointmentHistoryToIndex.isEmpty( ) || _queueAppointmentHistoryToIndex.size( ) < _nBatchSize )
+         {
+             Appointment appt = AppointmentService.findAppointmentById( nIdresource );
+             appt.setSlot( SlotService.findListSlotByIdAppointment( appt.getIdAppointment( ) ) );
+             Form form = FormService.findFormLightByPrimaryKey( appt.getSlot( ).get( 0 ).getIdForm( ) );
+             AppointmentPartialDataObject appPartialData = new AppointmentPartialDataObject( nIdresource,
+                     _stateService.findByResource( nIdresource, Appointment.APPOINTMENT_RESOURCE_TYPE, form.getIdWorkflow( ) ) );
+
+             DataSourceService.partialUpdate( appointmentDataSource, appPartialData.getId( ), appPartialData );
+             DataSourceService.processIncrementalIndexing( new StringBuilder( ), appointmentHistoryDataSource,
+                     getResourceHistoryDataObject( nIdresource, appt, form ) );
+         }
+         else
+         {
+             indexListAppointmentAndHistory( appointmentDataSource, appointmentHistoryDataSource, _queueAppointmentHistoryToIndex,
+             		nIdresource );
+         }
+    }
+    /**
+     * Index appointment data object
+     * 
+     * @param appointmentDataSource
+     *            the appointment Datasource
+     * @param nIdAppointment
+     *            the id of appointment to index
+     * @throws ElasticClientException the Exception
+     */
+    private void indexingAppointment( AppointmentDataSource appointmentDataSource, int nIdresource ) throws ElasticClientException
+    {
+    	 if ( _queueAppointmentToIndex.isEmpty( ) || _queueAppointmentToIndex.size( ) < _nBatchSize )
+         {
+
+             DataSourceService.processIncrementalIndexing( appointmentDataSource, builAppointmentDataObject( nIdresource ) );
+         }
+         else
+         {
+             indexListAppointment( appointmentDataSource, _queueAppointmentToIndex, nIdresource );
+         }
+	}
     /**
      * build list of AppointmentHistoryDataObject object
      * 
