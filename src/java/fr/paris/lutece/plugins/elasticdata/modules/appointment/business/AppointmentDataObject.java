@@ -55,6 +55,7 @@ public class AppointmentDataObject extends AbstractDataObject
     private long _lTimeUntilAvailability;
     private long _lTimeUntilAvailabilityCategory;
     private long _lSumNbPlacesBeforeAppointment;
+    private long _lCategorySumNbPlacesBeforeAppointment;
     private String _strState;
     private AppointmentForm _appointmentForm;
     private String _strNameInstance;
@@ -209,7 +210,23 @@ public class AppointmentDataObject extends AbstractDataObject
     {
         _lSumNbPlacesBeforeAppointment = lSumNbPlacesBeforeAppointment;
     }
-
+    /**
+     * Returns the CategorySumNbPlacesBeforeAppointment
+     * @return The CategorySumNbPlacesBeforeAppointment
+     */ 
+     public long getCategorySumNbPlacesBeforeAppointment()
+     {
+         return _lCategorySumNbPlacesBeforeAppointment;
+     }
+ 
+    /**
+     * Sets the CategorySumNbPlacesBeforeAppointment
+     * @param lCategorySumNbPlacesBeforeAppointment The CategorySumNbPlacesBeforeAppointment
+     */ 
+     public void setCategorySumNbPlacesBeforeAppointment( long lCategorySumNbPlacesBeforeAppointment )
+     {
+         _lCategorySumNbPlacesBeforeAppointment = lCategorySumNbPlacesBeforeAppointment;
+     }
     /**
      * Returns the State
      * 
