@@ -280,7 +280,7 @@ public final class AppointmentSlotUtil
     {
 
         StringBuilder sbuilder = new StringBuilder( );
-        sbuilder.append( "{ \"query\": { \"term\": { \"AppointmentId\":" + AppointmentSlotUtil.INSTANCE_NAME + "_" + idResource + "} }}" );
+        sbuilder.append( "{ \"query\": { \"match\": { \"appointmentId\":\"" + AppointmentSlotUtil.INSTANCE_NAME + "_" + idResource + "\"} }}" );
 
         return sbuilder.toString( );
     }

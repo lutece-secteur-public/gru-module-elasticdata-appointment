@@ -35,6 +35,7 @@ package fr.paris.lutece.plugins.elasticdata.modules.appointment.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
 import fr.paris.lutece.plugins.appointment.business.appointment.AppointmentHome;
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataSource;
 import fr.paris.lutece.plugins.elasticdata.business.DataObject;
