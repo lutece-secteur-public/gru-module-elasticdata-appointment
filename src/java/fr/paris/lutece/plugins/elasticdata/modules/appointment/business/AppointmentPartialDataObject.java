@@ -49,7 +49,7 @@ public class AppointmentPartialDataObject
     public AppointmentPartialDataObject( int nIdAppointment, State stateAppointment )
     {
 
-        _strId = AppointmentSlotUtil.getAppointmentId( nIdAppointment, AppointmentSlotUtil.INSTANCE_NAME );
+        _strId = String.valueOf( nIdAppointment );
         _strState = stateAppointment.getName( );
 
     }

@@ -56,7 +56,7 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
 
     public AppointmentHistoryDataObject( int resourceHistoryId )
     {
-        setId( AppointmentSlotUtil.INSTANCE_NAME + "_" + resourceHistoryId );
+        setId( String.valueOf( resourceHistoryId ));
     }
 
     /**

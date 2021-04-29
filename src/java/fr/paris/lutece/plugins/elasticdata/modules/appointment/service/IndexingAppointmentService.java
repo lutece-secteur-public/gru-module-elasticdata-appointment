@@ -223,7 +223,7 @@ public class IndexingAppointmentService
     {
         try
         {
-            DataSourceService.deleteById( appointmentDataSource, AppointmentSlotUtil.getAppointmentId( nIdAppointment, AppointmentSlotUtil.INSTANCE_NAME ) );
+            DataSourceService.deleteById( appointmentDataSource, String.valueOf( nIdAppointment ) );
             DataSourceService.deleteByQuery( appointmentHistoryDataSource, AppointmentSlotUtil.buildQueryIdResource( nIdAppointment ) );
         }
         catch( ElasticClientException e )
@@ -255,7 +255,7 @@ public class IndexingAppointmentService
 
         for ( ReferenceItem ref : FormService.findAllInReferenceList( ) )
         {
-
+        	
             AppointmentFormDTO appointmentFormDTO = FormService.buildAppointmentFormWithoutReservationRule( Integer.parseInt( ref.getCode( ) ) );
             mapForm.put( appointmentFormDTO.getIdForm( ), new AppointmentForm( appointmentFormDTO, mapCategory.get( appointmentFormDTO.getIdCategory( ) ) ) );
             mapIdState.putAll( _resourceWorkflowService.getListIdStateByListId( listIdDataObject, appointmentFormDTO.getIdWorkflow( ),

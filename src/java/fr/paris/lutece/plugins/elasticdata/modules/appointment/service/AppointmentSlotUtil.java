@@ -101,16 +101,10 @@ public final class AppointmentSlotUtil
      * using only alphanumerical caracters to avoid potential problems with code parsing this ID.
      * 
      */
-    public static String getSlotUid( Slot slot, String instanceName )
+    public static String getSlotUid( Slot slot )
     {
         String strSlotDateFormatted = slot.getStartingDateTime( ).format( SLOT__ID_DATE_FORMATTER );
-        return instanceName + "_F" + slot.getIdForm( ) + "D" + strSlotDateFormatted + "_appointment-slot";
-    }
-
-    public static String getAppointmentId( int appointmentId, String instanceName )
-    {
-
-        return instanceName + "_" + appointmentId;
+        return "F" + slot.getIdForm( ) + "D" + strSlotDateFormatted + "_appointment-slot";
     }
 
     /**

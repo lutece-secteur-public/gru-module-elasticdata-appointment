@@ -70,7 +70,7 @@ public class AppointmentDataObject extends AbstractDataObject
     public AppointmentDataObject( Appointment appointment, State stateAppointment, AppointmentForm appointmentForm )
     {
 
-        setId( AppointmentSlotUtil.getAppointmentId( appointment.getIdAppointment( ), AppointmentSlotUtil.INSTANCE_NAME ) );
+        setId( String.valueOf( appointment.getIdAppointment( ) ));
         _nIdAppointment = appointment.getIdAppointment( );
         _nNbPlaces = appointment.getNbPlaces( );
         _bIsCancelled = appointment.getIsCancelled( );

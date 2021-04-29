@@ -86,7 +86,7 @@ public class AppointmentSlotDataObject extends AbstractDataObject
             _nNbrPlacesTaken = appointmentSlot.getNbPlacesTaken( );
 
             setTimestamp( Timestamp.valueOf( appointmentSlot.getStartingDateTime( ) ).getTime( ) );
-            setId( AppointmentSlotUtil.getSlotUid( appointmentSlot, instanceName ) );
+            setId( AppointmentSlotUtil.getSlotUid( appointmentSlot ) );
         }
 
     }
