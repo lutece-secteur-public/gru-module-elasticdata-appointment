@@ -33,7 +33,6 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.business;
 
-import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.AppointmentSlotUtil;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
 
 /**
@@ -45,13 +44,15 @@ public class AppointmentPartialDataObject
 
     private String _strId;
     private String _strState;
+    private boolean _bIsCancelled;
 
-    public AppointmentPartialDataObject( int nIdAppointment, State stateAppointment )
+
+    public AppointmentPartialDataObject( int nIdAppointment, State stateAppointment, boolean bIsCancelled )
     {
 
         _strId = String.valueOf( nIdAppointment );
         _strState = stateAppointment.getName( );
-
+        _bIsCancelled = bIsCancelled;
     }
 
     /**
@@ -95,4 +96,25 @@ public class AppointmentPartialDataObject
     {
         _strState = strState;
     }
+    /**
+     * Returns the IsCancelled
+     * 
+     * @return The IsCancelled
+     */
+    public boolean getIsCancelled( )
+    {
+        return _bIsCancelled;
+    }
+
+    /**
+     * Sets the IsCancelled
+     * 
+     * @param bIsCancelled
+     *            The IsCancelled
+     */
+    public void setIsCancelled( boolean bIsCancelled )
+    {
+        _bIsCancelled = bIsCancelled;
+    }
+
 }

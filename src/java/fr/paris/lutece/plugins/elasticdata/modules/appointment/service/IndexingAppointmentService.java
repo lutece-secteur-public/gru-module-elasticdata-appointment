@@ -316,7 +316,7 @@ public class IndexingAppointmentService
              appt.setSlot( SlotService.findListSlotByIdAppointment( appt.getIdAppointment( ) ) );
              Form form = FormService.findFormLightByPrimaryKey( appt.getSlot( ).get( 0 ).getIdForm( ) );
              AppointmentPartialDataObject appPartialData = new AppointmentPartialDataObject( nIdresource,
-                     _stateService.findByResource( nIdresource, Appointment.APPOINTMENT_RESOURCE_TYPE, form.getIdWorkflow( ) ) );
+                     _stateService.findByResource( nIdresource, Appointment.APPOINTMENT_RESOURCE_TYPE, form.getIdWorkflow( ) ), appt.getIsCancelled( ) );
 
              DataSourceService.partialUpdate( appointmentDataSource, appPartialData.getId( ), appPartialData );
              DataSourceService.processIncrementalIndexing( new StringBuilder( ), appointmentHistoryDataSource,
