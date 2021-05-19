@@ -46,7 +46,6 @@ public class AppointmentPartialDataObject
     private String _strState;
     private boolean _bIsCancelled;
 
-
     public AppointmentPartialDataObject( int nIdAppointment, State stateAppointment, boolean bIsCancelled )
     {
 
@@ -96,6 +95,7 @@ public class AppointmentPartialDataObject
     {
         _strState = strState;
     }
+
     /**
      * Returns the IsCancelled
      * 

@@ -70,7 +70,7 @@ public class AppointmentDataObject extends AbstractDataObject
     public AppointmentDataObject( Appointment appointment, State stateAppointment, AppointmentForm appointmentForm )
     {
 
-        setId( String.valueOf( appointment.getIdAppointment( ) ));
+        setId( String.valueOf( appointment.getIdAppointment( ) ) );
         _nIdAppointment = appointment.getIdAppointment( );
         _nNbPlaces = appointment.getNbPlaces( );
         _bIsCancelled = appointment.getIsCancelled( );
@@ -210,23 +210,28 @@ public class AppointmentDataObject extends AbstractDataObject
     {
         _lSumNbPlacesBeforeAppointment = lSumNbPlacesBeforeAppointment;
     }
+
     /**
      * Returns the CategorySumNbPlacesBeforeAppointment
+     * 
      * @return The CategorySumNbPlacesBeforeAppointment
-     */ 
-     public long getCategorySumNbPlacesBeforeAppointment()
-     {
-         return _lCategorySumNbPlacesBeforeAppointment;
-     }
- 
+     */
+    public long getCategorySumNbPlacesBeforeAppointment( )
+    {
+        return _lCategorySumNbPlacesBeforeAppointment;
+    }
+
     /**
      * Sets the CategorySumNbPlacesBeforeAppointment
-     * @param lCategorySumNbPlacesBeforeAppointment The CategorySumNbPlacesBeforeAppointment
-     */ 
-     public void setCategorySumNbPlacesBeforeAppointment( long lCategorySumNbPlacesBeforeAppointment )
-     {
-         _lCategorySumNbPlacesBeforeAppointment = lCategorySumNbPlacesBeforeAppointment;
-     }
+     * 
+     * @param lCategorySumNbPlacesBeforeAppointment
+     *            The CategorySumNbPlacesBeforeAppointment
+     */
+    public void setCategorySumNbPlacesBeforeAppointment( long lCategorySumNbPlacesBeforeAppointment )
+    {
+        _lCategorySumNbPlacesBeforeAppointment = lCategorySumNbPlacesBeforeAppointment;
+    }
+
     /**
      * Returns the State
      * 

@@ -193,13 +193,15 @@ public class IndexingSlotService
                 {
                     try
                     {
-                    	Integer nIdresource= nIdSlot;
-                    	do {
-	                        
-                    		indexingSlot( nIdresource, dataSource );
-	                        nIdresource= _queueSlotToIndex.poll( );
-                       
-            	        }while( nIdresource != null );
+                        Integer nIdresource = nIdSlot;
+                        do
+                        {
+
+                            indexingSlot( nIdresource, dataSource );
+                            nIdresource = _queueSlotToIndex.poll( );
+
+                        }
+                        while ( nIdresource != null );
                     }
                     catch( ElasticClientException e )
                     {
@@ -225,6 +227,7 @@ public class IndexingSlotService
                 _queueSlotToIndex.add( nIdSlot );
             }
     }
+
     /**
      * Index the slot (and the related form to have the good number of available places) in elasticsearch
      * 
@@ -232,20 +235,22 @@ public class IndexingSlotService
      *            the id slot
      * @param dataSource
      *            the data source
-     * @throws ElasticClientException the Exception
+     * @throws ElasticClientException
+     *             the Exception
      */
-    private static void indexingSlot( int nIdresource, DataSource dataSource  ) throws ElasticClientException {
-    	
-    	 if ( _queueSlotToIndex.isEmpty( ) || _queueSlotToIndex.size( ) < _nBatchSize )
-         {
+    private static void indexingSlot( int nIdresource, DataSource dataSource ) throws ElasticClientException
+    {
 
-             DataSourceService.processIncrementalIndexing( dataSource, builAppointmentSlotDataObject( nIdresource ) );
+        if ( _queueSlotToIndex.isEmpty( ) || _queueSlotToIndex.size( ) < _nBatchSize )
+        {
 
-         }
-         else
-         {
-             indexListSlot( _queueSlotToIndex, nIdresource, dataSource );
-         }
+            DataSourceService.processIncrementalIndexing( dataSource, builAppointmentSlotDataObject( nIdresource ) );
+
+        }
+        else
+        {
+            indexListSlot( _queueSlotToIndex, nIdresource, dataSource );
+        }
     }
 
     /**

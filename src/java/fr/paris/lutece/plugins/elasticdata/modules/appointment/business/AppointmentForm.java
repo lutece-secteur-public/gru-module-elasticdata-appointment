@@ -60,7 +60,7 @@ public class AppointmentForm
         _bIsActive = appointmentFormDto.getIsActive( );
         _bIsMultiSlot = appointmentFormDto.getIsMultislotAppointment( );
         _nMinTimeBeforeAppointment = appointmentFormDto.getMinTimeBeforeAppointment( );
-        _nIdWorkflow = appointmentFormDto.getIdWorkflow();        
+        _nIdWorkflow = appointmentFormDto.getIdWorkflow( );
         if ( category != null )
         {
             _strCategory = category.getLabel( );

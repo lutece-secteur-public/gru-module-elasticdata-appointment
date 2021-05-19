@@ -123,14 +123,16 @@ public class IndexingAppointmentService
                 public void run( )
                 {
                     try
-                    {	
-                    	Integer nIdresource= nIdAppointment;
-                    	do {
-                    		
-                    		indexingAppointmentStateAndHistory(  appointmentDataSource,  appointmentHistoryDataSource, nIdresource );
-	                        nIdresource= _queueAppointmentHistoryToIndex.poll( );
-	                        
-                    	}while( nIdresource != null );
+                    {
+                        Integer nIdresource = nIdAppointment;
+                        do
+                        {
+
+                            indexingAppointmentStateAndHistory( appointmentDataSource, appointmentHistoryDataSource, nIdresource );
+                            nIdresource = _queueAppointmentHistoryToIndex.poll( );
+
+                        }
+                        while ( nIdresource != null );
                     }
                     catch( ElasticClientException e )
                     {
@@ -175,14 +177,16 @@ public class IndexingAppointmentService
                 {
                     try
                     {
-                    	Integer nIdresource= nIdAppointment;
-                	    do {
-                	    	
-                	    	indexingAppointment( appointmentDataSource, nIdresource );
-                            nIdresource= _queueAppointmentToIndex.poll( );
-                            
-                	    }while( nIdresource != null );
-                	    
+                        Integer nIdresource = nIdAppointment;
+                        do
+                        {
+
+                            indexingAppointment( appointmentDataSource, nIdresource );
+                            nIdresource = _queueAppointmentToIndex.poll( );
+
+                        }
+                        while ( nIdresource != null );
+
                     }
                     catch( ElasticClientException e )
                     {
@@ -254,7 +258,7 @@ public class IndexingAppointmentService
         Map<Integer, Integer> mapIdState = new HashMap<>( );
 
         for ( ReferenceItem ref : FormService.findAllInReferenceList( ) )
-        {        	
+        {
             AppointmentFormDTO appointmentFormDTO = FormService.buildAppointmentFormWithoutReservationRule( Integer.parseInt( ref.getCode( ) ) );
             mapForm.put( appointmentFormDTO.getIdForm( ), new AppointmentForm( appointmentFormDTO, mapCategory.get( appointmentFormDTO.getIdCategory( ) ) ) );
             mapIdState.putAll( _resourceWorkflowService.getListIdStateByListId( listIdDataObject, appointmentFormDTO.getIdWorkflow( ),
@@ -304,29 +308,30 @@ public class IndexingAppointmentService
      *            the appointment history DataSource
      * @param nIdAppointment
      *            the id of appointment to index
-     * @throws ElasticClientException the Exception
+     * @throws ElasticClientException
+     *             the Exception
      */
     private void indexingAppointmentStateAndHistory( AppointmentDataSource appointmentDataSource, AppointmentHistoryDataSource appointmentHistoryDataSource,
             int nIdresource ) throws ElasticClientException
     {
-    	 if ( _queueAppointmentHistoryToIndex.isEmpty( ) || _queueAppointmentHistoryToIndex.size( ) < _nBatchSize )
-         {
-             Appointment appt = AppointmentService.findAppointmentById( nIdresource );
-             appt.setSlot( SlotService.findListSlotByIdAppointment( appt.getIdAppointment( ) ) );
-             Form form = FormService.findFormLightByPrimaryKey( appt.getSlot( ).get( 0 ).getIdForm( ) );
-             AppointmentPartialDataObject appPartialData = new AppointmentPartialDataObject( nIdresource,
-                     _stateService.findByResource( nIdresource, Appointment.APPOINTMENT_RESOURCE_TYPE, form.getIdWorkflow( ) ), appt.getIsCancelled( ) );
+        if ( _queueAppointmentHistoryToIndex.isEmpty( ) || _queueAppointmentHistoryToIndex.size( ) < _nBatchSize )
+        {
+            Appointment appt = AppointmentService.findAppointmentById( nIdresource );
+            appt.setSlot( SlotService.findListSlotByIdAppointment( appt.getIdAppointment( ) ) );
+            Form form = FormService.findFormLightByPrimaryKey( appt.getSlot( ).get( 0 ).getIdForm( ) );
+            AppointmentPartialDataObject appPartialData = new AppointmentPartialDataObject( nIdresource,
+                    _stateService.findByResource( nIdresource, Appointment.APPOINTMENT_RESOURCE_TYPE, form.getIdWorkflow( ) ), appt.getIsCancelled( ) );
 
-             DataSourceService.partialUpdate( appointmentDataSource, appPartialData.getId( ), appPartialData );
-             DataSourceService.processIncrementalIndexing( new StringBuilder( ), appointmentHistoryDataSource,
-                     getResourceHistoryDataObject( nIdresource, appt, form ) );
-         }
-         else
-         {
-             indexListAppointmentAndHistory( appointmentDataSource, appointmentHistoryDataSource, _queueAppointmentHistoryToIndex,
-             		nIdresource );
-         }
+            DataSourceService.partialUpdate( appointmentDataSource, appPartialData.getId( ), appPartialData );
+            DataSourceService.processIncrementalIndexing( new StringBuilder( ), appointmentHistoryDataSource,
+                    getResourceHistoryDataObject( nIdresource, appt, form ) );
+        }
+        else
+        {
+            indexListAppointmentAndHistory( appointmentDataSource, appointmentHistoryDataSource, _queueAppointmentHistoryToIndex, nIdresource );
+        }
     }
+
     /**
      * Index appointment data object
      * 
@@ -334,20 +339,22 @@ public class IndexingAppointmentService
      *            the appointment Datasource
      * @param nIdAppointment
      *            the id of appointment to index
-     * @throws ElasticClientException the Exception
+     * @throws ElasticClientException
+     *             the Exception
      */
     private void indexingAppointment( AppointmentDataSource appointmentDataSource, int nIdresource ) throws ElasticClientException
     {
-    	 if ( _queueAppointmentToIndex.isEmpty( ) || _queueAppointmentToIndex.size( ) < _nBatchSize )
-         {
+        if ( _queueAppointmentToIndex.isEmpty( ) || _queueAppointmentToIndex.size( ) < _nBatchSize )
+        {
 
-             DataSourceService.processIncrementalIndexing( appointmentDataSource, builAppointmentDataObject( nIdresource ) );
-         }
-         else
-         {
-             indexListAppointment( appointmentDataSource, _queueAppointmentToIndex, nIdresource );
-         }
-	}
+            DataSourceService.processIncrementalIndexing( appointmentDataSource, builAppointmentDataObject( nIdresource ) );
+        }
+        else
+        {
+            indexListAppointment( appointmentDataSource, _queueAppointmentToIndex, nIdresource );
+        }
+    }
+
     /**
      * build list of AppointmentHistoryDataObject object
      * 
@@ -360,8 +367,8 @@ public class IndexingAppointmentService
     {
         List<AppointmentHistoryDataObject> appointmentHistoryList = new ArrayList<>( );
         if ( CollectionUtils.isNotEmpty( listResourceHistory ) )
-        {            
-            Map<Integer, AppointmentForm> listAppointmentForm = getAllAppointmentForms();
+        {
+            Map<Integer, AppointmentForm> listAppointmentForm = getAllAppointmentForms( );
             Map<Integer, List<ResourceHistory>> resourceHistoryByResource = listResourceHistory.stream( )
                     .collect( Collectors.groupingBy( ResourceHistory::getIdResource ) );
             AppointmentFilterDTO filter = new AppointmentFilterDTO( );
@@ -385,7 +392,8 @@ public class IndexingAppointmentService
                     for ( ResourceHistory resourceHistory : listResourceHistorySorted )
                     {
                         appointmentForm = listAppointmentForm.get( appointment.getSlot( ).get( 0 ).getIdForm( ) );
-                        AppointmentHistoryDataObject appointmentHistoryDataObject = new AppointmentHistoryDataObject( resourceHistory.getId( ), appointmentForm );
+                        AppointmentHistoryDataObject appointmentHistoryDataObject = new AppointmentHistoryDataObject( resourceHistory.getId( ),
+                                appointmentForm );
                         appointmentHistoryDataObject.setAppointmentId( AppointmentSlotUtil.INSTANCE_NAME + "_" + resourceHistory.getIdResource( ) );
                         appointmentHistoryDataObject.setTimestamp( resourceHistory.getCreationDate( ).getTime( ) );
                         appointmentHistoryDataObject.setTaskDuration( duration( appointmentPreviousActionCreation, resourceHistory.getCreationDate( ) ) );
@@ -484,7 +492,8 @@ public class IndexingAppointmentService
         for ( ResourceHistory resourceHistory : listResourceHistory )
         {
 
-            AppointmentHistoryDataObject appointmentHistoryDataObject = new AppointmentHistoryDataObject( resourceHistory.getId( ), getAppointmentForm( form.getIdForm( ) ) );
+            AppointmentHistoryDataObject appointmentHistoryDataObject = new AppointmentHistoryDataObject( resourceHistory.getId( ),
+                    getAppointmentForm( form.getIdForm( ) ) );
             appointmentHistoryDataObject.setAppointmentId( AppointmentSlotUtil.INSTANCE_NAME + "_" + resourceHistory.getIdResource( ) );
             appointmentHistoryDataObject.setTimestamp( resourceHistory.getCreationDate( ).getTime( ) );
             appointmentHistoryDataObject.setTaskDuration( duration( appointmentPreviousActionCreation, resourceHistory.getCreationDate( ) ) );
@@ -537,14 +546,17 @@ public class IndexingAppointmentService
 
     /**
      * Get appointment form
-     * @param form the form
+     * 
+     * @param form
+     *            the form
      * @return the appointment form
      */
-    private AppointmentForm getAppointmentForm( int idForm ) {
-      
-            AppointmentFormDTO formDTO = FormService.buildAppointmentFormWithoutReservationRule( idForm );
-            Category category = ( formDTO.getIdCategory( ) != 0 ) ? CategoryHome.findByPrimaryKey( formDTO.getIdCategory( ) ) : null;
-            return new AppointmentForm( formDTO, category );
+    private AppointmentForm getAppointmentForm( int idForm )
+    {
+
+        AppointmentFormDTO formDTO = FormService.buildAppointmentFormWithoutReservationRule( idForm );
+        Category category = ( formDTO.getIdCategory( ) != 0 ) ? CategoryHome.findByPrimaryKey( formDTO.getIdCategory( ) ) : null;
+        return new AppointmentForm( formDTO, category );
     }
 
     /**
@@ -552,12 +564,14 @@ public class IndexingAppointmentService
      * 
      * @return the map with form id and appointment form
      */
-    private Map<Integer, AppointmentForm> getAllAppointmentForms( ) {
+    private Map<Integer, AppointmentForm> getAllAppointmentForms( )
+    {
         Map<Integer, AppointmentForm> listAppointmentForm = new HashMap<>( );
 
-        for( Form form : FormService.findAllForms( ) ) {
-           
-            listAppointmentForm.put( form.getIdForm( ),  getAppointmentForm( form.getIdForm( ) ) );
+        for ( Form form : FormService.findAllForms( ) )
+        {
+
+            listAppointmentForm.put( form.getIdForm( ), getAppointmentForm( form.getIdForm( ) ) );
         }
         return listAppointmentForm;
     }
