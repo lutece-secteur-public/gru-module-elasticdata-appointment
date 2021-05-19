@@ -254,8 +254,7 @@ public class IndexingAppointmentService
         Map<Integer, Integer> mapIdState = new HashMap<>( );
 
         for ( ReferenceItem ref : FormService.findAllInReferenceList( ) )
-        {
-        	
+        {        	
             AppointmentFormDTO appointmentFormDTO = FormService.buildAppointmentFormWithoutReservationRule( Integer.parseInt( ref.getCode( ) ) );
             mapForm.put( appointmentFormDTO.getIdForm( ), new AppointmentForm( appointmentFormDTO, mapCategory.get( appointmentFormDTO.getIdCategory( ) ) ) );
             mapIdState.putAll( _resourceWorkflowService.getListIdStateByListId( listIdDataObject, appointmentFormDTO.getIdWorkflow( ),
@@ -361,15 +360,15 @@ public class IndexingAppointmentService
     {
         List<AppointmentHistoryDataObject> appointmentHistoryList = new ArrayList<>( );
         if ( CollectionUtils.isNotEmpty( listResourceHistory ) )
-        {
-
-            Map<Integer, Form> listForm = FormService.findAllForms( ).stream( ).collect( Collectors.toMap( Form::getIdForm, form -> form ) );
+        {            
+            Map<Integer, AppointmentForm> listAppointmentForm = getAllAppointmentForms();
             Map<Integer, List<ResourceHistory>> resourceHistoryByResource = listResourceHistory.stream( )
                     .collect( Collectors.groupingBy( ResourceHistory::getIdResource ) );
             AppointmentFilterDTO filter = new AppointmentFilterDTO( );
             filter.setListIdAppointment( new ArrayList<Integer>( resourceHistoryByResource.keySet( ) ) );
             List<Appointment> listAppointment = AppointmentService.findListAppointmentsByFilter( filter );
-            Form form;
+
+            AppointmentForm appointmentForm;
             Timestamp appointmentCreation;
             Timestamp appointmentPreviousActionCreation;
             Timestamp appointmentDate;
@@ -385,11 +384,8 @@ public class IndexingAppointmentService
                     appointmentDate = Timestamp.valueOf( AppointmentUtilities.getStartingDateTime( appointment ) );
                     for ( ResourceHistory resourceHistory : listResourceHistorySorted )
                     {
-
-                        AppointmentHistoryDataObject appointmentHistoryDataObject = new AppointmentHistoryDataObject( resourceHistory.getId( ) );
-                        form = listForm.get( appointment.getSlot( ).get( 0 ).getIdForm( ) );
-                        appointmentHistoryDataObject.setFormName( form.getTitle( ) );
-                        appointmentHistoryDataObject.setFormId( form.getIdForm( ) );
+                        appointmentForm = listAppointmentForm.get( appointment.getSlot( ).get( 0 ).getIdForm( ) );
+                        AppointmentHistoryDataObject appointmentHistoryDataObject = new AppointmentHistoryDataObject( resourceHistory.getId( ), appointmentForm );
                         appointmentHistoryDataObject.setAppointmentId( AppointmentSlotUtil.INSTANCE_NAME + "_" + resourceHistory.getIdResource( ) );
                         appointmentHistoryDataObject.setTimestamp( resourceHistory.getCreationDate( ).getTime( ) );
                         appointmentHistoryDataObject.setTaskDuration( duration( appointmentPreviousActionCreation, resourceHistory.getCreationDate( ) ) );
@@ -488,9 +484,7 @@ public class IndexingAppointmentService
         for ( ResourceHistory resourceHistory : listResourceHistory )
         {
 
-            AppointmentHistoryDataObject appointmentHistoryDataObject = new AppointmentHistoryDataObject( resourceHistory.getId( ) );
-            appointmentHistoryDataObject.setFormName( form.getTitle( ) );
-            appointmentHistoryDataObject.setFormId( form.getIdForm( ) );
+            AppointmentHistoryDataObject appointmentHistoryDataObject = new AppointmentHistoryDataObject( resourceHistory.getId( ), getAppointmentForm( form.getIdForm( ) ) );
             appointmentHistoryDataObject.setAppointmentId( AppointmentSlotUtil.INSTANCE_NAME + "_" + resourceHistory.getIdResource( ) );
             appointmentHistoryDataObject.setTimestamp( resourceHistory.getCreationDate( ).getTime( ) );
             appointmentHistoryDataObject.setTaskDuration( duration( appointmentPreviousActionCreation, resourceHistory.getCreationDate( ) ) );
@@ -539,5 +533,32 @@ public class IndexingAppointmentService
         DataSourceService.processIncrementalIndexing( builder, appointmentDataSource, buildDataObjects( listIdappointment ) );
         DataSourceService.processIncrementalIndexing( builder, appointmentHistoryDataSource, buildHistoryWfDataObjects( listIdappointment ) );
         AppLogService.debug( builder.toString( ) );
+    }
+
+    /**
+     * Get appointment form
+     * @param form the form
+     * @return the appointment form
+     */
+    private AppointmentForm getAppointmentForm( int idForm ) {
+      
+            AppointmentFormDTO formDTO = FormService.buildAppointmentFormWithoutReservationRule( idForm );
+            Category category = ( formDTO.getIdCategory( ) != 0 ) ? CategoryHome.findByPrimaryKey( formDTO.getIdCategory( ) ) : null;
+            return new AppointmentForm( formDTO, category );
+    }
+
+    /**
+     * Get all appointment forms mapped with form id
+     * 
+     * @return the map with form id and appointment form
+     */
+    private Map<Integer, AppointmentForm> getAllAppointmentForms( ) {
+        Map<Integer, AppointmentForm> listAppointmentForm = new HashMap<>( );
+
+        for( Form form : FormService.findAllForms( ) ) {
+           
+            listAppointmentForm.put( form.getIdForm( ),  getAppointmentForm( form.getIdForm( ) ) );
+        }
+        return listAppointmentForm;
     }
 }

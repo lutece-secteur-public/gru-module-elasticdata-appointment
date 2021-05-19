@@ -36,7 +36,6 @@ package fr.paris.lutece.plugins.elasticdata.modules.appointment.business;
 import java.sql.Timestamp;
 
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataObject;
-import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.AppointmentSlotUtil;
 
 /**
  * FormResponseDataObject
@@ -44,8 +43,6 @@ import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.Appointme
 public class AppointmentHistoryDataObject extends AbstractDataObject
 {
     private String _strId;
-    private String _strFormName;
-    private int _nFormId;
     private String _strAppointmentId;
     private String _strActionName;
     private long _lTaskDuration;
@@ -53,10 +50,12 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
     private long _lAppointmentDateActionDateDuration;
     private String _strUnitName;
     private Timestamp _tCreationDate;
+    private AppointmentForm _appointmentForm;
 
-    public AppointmentHistoryDataObject( int resourceHistoryId )
+    public AppointmentHistoryDataObject( int resourceHistoryId, AppointmentForm appointmentForm )
     {
-        setId( String.valueOf( resourceHistoryId ));
+        setId( String.valueOf( resourceHistoryId ) );
+        _appointmentForm = appointmentForm;
     }
 
     /**
@@ -78,27 +77,6 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
     public void setId( String strId )
     {
         _strId = strId;
-    }
-
-    /**
-     * Returns the Form id
-     * 
-     * @return The Form id
-     */
-    public int getFormId( )
-    {
-        return _nFormId;
-    }
-
-    /**
-     * Sets the Form id
-     * 
-     * @param nFormId
-     *            The Form id
-     */
-    public void setFormId( int nFormId )
-    {
-        _nFormId = nFormId;
     }
 
     /**
@@ -186,27 +164,6 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
     }
 
     /**
-     * Returns the Form Name
-     * 
-     * @return The Form Name
-     */
-    public String getFormName( )
-    {
-        return _strFormName;
-    }
-
-    /**
-     * Sets the Form Name
-     * 
-     * @param strFormName
-     *            The Form Name
-     */
-    public void setFormName( String strFormName )
-    {
-        _strFormName = strFormName;
-    }
-
-    /**
      * Returns the Unit Name
      * 
      * @return The Unit Name
@@ -266,6 +223,27 @@ public class AppointmentHistoryDataObject extends AbstractDataObject
     public void setCreationDate( Timestamp dateCreation )
     {
         _tCreationDate = dateCreation;
+    }
+
+    /**
+     * Returns the AppointmentForm
+     * 
+     * @return The AppointmentForm
+     */
+    public AppointmentForm getAppointmentForm( )
+    {
+        return _appointmentForm;
+    }
+
+    /**
+     * Sets the AppointmentForm
+     * 
+     * @param appointmentForm
+     *            The AppointmentForm
+     */
+    public void setAppointmentForm( AppointmentForm appointmentForm )
+    {
+        _appointmentForm = appointmentForm;
     }
 
 }

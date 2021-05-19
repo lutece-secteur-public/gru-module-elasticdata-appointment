@@ -50,6 +50,7 @@ public class AppointmentForm
     private String _strGeoPoint;
     private String _strAddress;
     private int _nMinTimeBeforeAppointment;
+    private int _nIdWorkflow;
 
     public AppointmentForm( AppointmentFormDTO appointmentFormDto, Category category )
     {
@@ -59,7 +60,7 @@ public class AppointmentForm
         _bIsActive = appointmentFormDto.getIsActive( );
         _bIsMultiSlot = appointmentFormDto.getIsMultislotAppointment( );
         _nMinTimeBeforeAppointment = appointmentFormDto.getMinTimeBeforeAppointment( );
-
+        _nIdWorkflow = appointmentFormDto.getIdWorkflow();        
         if ( category != null )
         {
             _strCategory = category.getLabel( );
@@ -238,5 +239,26 @@ public class AppointmentForm
     public void setMinTimeBeforeAppointment( int nMinTimeBeforeAppointment )
     {
         _nMinTimeBeforeAppointment = nMinTimeBeforeAppointment;
+    }
+
+    /**
+     * Returns the IdWorkflow
+     * 
+     * @return The IdWorkflow
+     */
+    public int getIdWorkflow( )
+    {
+        return _nIdWorkflow;
+    }
+
+    /**
+     * Sets the IdWorkflow
+     * 
+     * @param nIdWorkflow
+     *            The IdWorkflow
+     */
+    public void setIdWorkflow( int nIdWorkflow )
+    {
+        _nIdWorkflow = nIdWorkflow;
     }
 }
