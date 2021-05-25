@@ -60,7 +60,7 @@ public class AppointmentDataObject extends AbstractDataObject
     private AppointmentForm _appointmentForm;
     private String _strNameInstance;
     private long _lCreatedTimestamp;
-    private boolean _bIsFront;
+    private boolean _bIsAdminCreator;
 
     public AppointmentDataObject( )
     {
@@ -75,7 +75,7 @@ public class AppointmentDataObject extends AbstractDataObject
         _nNbPlaces = appointment.getNbPlaces( );
         _bIsCancelled = appointment.getIsCancelled( );
         _strNameInstance = AppointmentSlotUtil.INSTANCE_NAME;
-        _bIsFront = StringUtils.isEmpty( appointment.getAdminUserCreate( ) );
+        _bIsAdminCreator = StringUtils.isNotEmpty( appointment.getAdminUserCreate( ) );
         _appointmentForm = appointmentForm;
 
         if ( stateAppointment != null )
@@ -323,7 +323,7 @@ public class AppointmentDataObject extends AbstractDataObject
      */
     public boolean getAdminCreator( )
     {
-        return _bIsFront;
+        return _bIsAdminCreator;
     }
 
     /**
@@ -332,8 +332,8 @@ public class AppointmentDataObject extends AbstractDataObject
      * @param bIsFront
      *            The bIsFront
      */
-    public void setAdminCreator( boolean bIsFront )
+    public void setAdminCreator( boolean bIsAdminCreator )
     {
-        _bIsFront = bIsFront;
+        _bIsAdminCreator = bIsAdminCreator;
     }
 }
