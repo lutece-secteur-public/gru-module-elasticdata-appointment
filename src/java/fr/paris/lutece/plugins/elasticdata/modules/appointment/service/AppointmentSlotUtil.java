@@ -39,6 +39,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalField;
 import java.time.temporal.WeekFields;
 import java.util.Comparator;
@@ -198,12 +199,7 @@ public final class AppointmentSlotUtil
     {
         Display display = DisplayService.findDisplayWithFormId( appointmentForm.getIdForm( ) );
         // Get the nb weeks to display
-        LocalDate startingDateOfDisplay = LocalDate.now( );
-        if ( appointmentForm.getDateStartValidity( ) != null )
-        {
-            startingDateOfDisplay = appointmentForm.getDateStartValidity( ).toLocalDate( );
-        }
-        LocalDate endingDateOfDisplay = startingDateOfDisplay.with( WeekFields.of( LocaleService.getDefault( ) ).dayOfWeek( ), DayOfWeek.SUNDAY.getValue( ) )
+        LocalDate endingDateOfDisplay = LocalDate.now( ).with( WeekFields.of( LocaleService.getDefault( ) ).dayOfWeek( ), DayOfWeek.SUNDAY.getValue( ) )
                 .plusWeeks( display.getNbWeeksToDisplay( ) - 1L );
         LocalDate endingValidityDate = null;
         if ( appointmentForm.getDateEndValidity( ) != null )
