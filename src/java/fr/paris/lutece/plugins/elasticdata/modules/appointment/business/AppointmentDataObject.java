@@ -34,7 +34,7 @@
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.business;
 
 import java.sql.Timestamp;
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import fr.paris.lutece.plugins.appointment.business.appointment.Appointment;
 import fr.paris.lutece.plugins.appointment.service.AppointmentUtilities;
