@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><plug-in>
     <name>elasticdata-appointment</name>
     <class>fr.paris.lutece.plugins.elasticdata.modules.appointment.business.ElasticDataAppointmentPlugin</class>
-    <version>3.0.2-SNAPSHOT</version>
+    <version>3.0.2</version>
     <documentation/>
     <installation/>
     <changes/>
