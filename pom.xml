@@ -10,7 +10,7 @@
     <groupId>fr.paris.lutece.plugins</groupId>
         <artifactId>module-elasticdata-appointment</artifactId>
     <packaging>lutece-plugin</packaging>
-    <version>3.0.2</version>
+    <version>3.0.3-SNAPSHOT</version>
     	<name>Lutece elasticdata appointment module</name>
     <repositories>
         <repository>
@@ -52,6 +52,6 @@
         <connection>scm:git:https://github.com/lutece-secteur-public/gru-module-elasticdata-appointment.git</connection>
         <developerConnection>scm:git:https://github.com/lutece-secteur-public/gru-module-elasticdata-appointment.git</developerConnection>
         <url>https://github.com/lutece-secteur-public/gru-module-elasticdata-appointment.git</url>
-      <tag>module-elasticdata-appointment-3.0.2</tag>
+      <tag>HEAD</tag>
   </scm>
 </project>
