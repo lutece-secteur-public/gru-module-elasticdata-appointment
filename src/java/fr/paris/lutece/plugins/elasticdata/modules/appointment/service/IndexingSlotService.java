@@ -91,45 +91,37 @@ public class IndexingSlotService
         bIndexToLunch.set( true );
         if ( bIndexIsRunning.compareAndSet( false, true ) )
         {
-            ( new Thread( )
+            StringBuilder sbuilderLogs = new StringBuilder( );
+            try
             {
-                @Override
-                public void run( )
+                while ( bIndexToLunch.compareAndSet( true, false ) )
                 {
-                    StringBuilder sbuilderLogs = new StringBuilder( );
-                    try
+
+                    Collection<DataObject> collResult = new ArrayList<>( );
+                    Category category = CategoryHome.findByPrimaryKey( apptFormDTO.getIdCategory( ) );
+                    List<Slot> listSlots = AppointmentSlotUtil.getAllSlots( apptFormDTO );
+
+                    for ( Slot appointmentSlot : listSlots )
                     {
-
-                        while ( bIndexToLunch.compareAndSet( true, false ) )
-                        {
-
-                            Collection<DataObject> collResult = new ArrayList<>( );
-                            Category category = CategoryHome.findByPrimaryKey( apptFormDTO.getIdCategory( ) );
-                            List<Slot> listSlots = AppointmentSlotUtil.getAllSlots( apptFormDTO );
-
-                            for ( Slot appointmentSlot : listSlots )
-                            {
-                                collResult.add( new AppointmentSlotDataObject( apptFormDTO, appointmentSlot, AppointmentSlotUtil.INSTANCE_NAME, category ) );
-
-                            }
-
-                            DataSourceService.deleteByQuery( dataSource, AppointmentSlotUtil.buildQuery( apptFormDTO.getIdForm( ) ) );
-                            DataSourceService.processIncrementalIndexing( sbuilderLogs, dataSource, collResult );
-                        }
+                        collResult.add( new AppointmentSlotDataObject( apptFormDTO, appointmentSlot, AppointmentSlotUtil.INSTANCE_NAME, category ) );
 
                     }
-                    catch( ElasticClientException e )
-                    {
-                        AppLogService.error( "Error during ElasticDataAppointmentListener reindexForm: " + sbuilderLogs, e );
-                    }
-                    finally
-                    {
-                        bIndexIsRunning.set( false );
-                    }
 
+                    DataSourceService.deleteByQuery( dataSource, AppointmentSlotUtil.buildQuery( apptFormDTO.getIdForm( ) ) );
+                    DataSourceService.processIncrementalIndexing( sbuilderLogs, dataSource, collResult );
                 }
-            } ).start( );
+
+            }
+            catch( ElasticClientException e )
+            {
+                AppLogService.error( "Error during ElasticDataAppointmentListener reindexForm: " + sbuilderLogs, e );
+            }
+            finally
+            {
+                bIndexIsRunning.set( false );
+            }
         }
+
     }
 
     /**
@@ -142,35 +134,27 @@ public class IndexingSlotService
      */
     public static void indexFormByDateRange( DataSource dataSource, AppointmentFormDTO apptFormDTO, LocalDate startingDate, LocalDate endingDate )
     {
-        ( new Thread( )
+        StringBuilder sbuilderLogs = new StringBuilder( );
+        try
         {
-            @Override
-            public void run( )
+            Collection<DataObject> collResult = new ArrayList<>( );
+            Category category = CategoryHome.findByPrimaryKey( apptFormDTO.getIdCategory( ) );
+            List<Slot> listSlots = SlotService.buildListSlot( apptFormDTO.getIdForm( ), WeekDefinitionService.findAllWeekDefinition( apptFormDTO.getIdForm( ) ),
+                    startingDate, endingDate );
+
+            for ( Slot appointmentSlot : listSlots )
             {
-                StringBuilder sbuilderLogs = new StringBuilder( );
-                try
-                {
-                    Collection<DataObject> collResult = new ArrayList<>( );
-                    Category category = CategoryHome.findByPrimaryKey( apptFormDTO.getIdCategory( ) );
-                    List<Slot> listSlots = SlotService.buildListSlot( apptFormDTO.getIdForm( ),
-                            WeekDefinitionService.findAllWeekDefinition( apptFormDTO.getIdForm( ) ), startingDate, endingDate );
-
-                    for ( Slot appointmentSlot : listSlots )
-                    {
-                        collResult.add( new AppointmentSlotDataObject( apptFormDTO, appointmentSlot, AppointmentSlotUtil.INSTANCE_NAME, category ) );
-                    }
-
-                    DataSourceService.deleteByQuery( dataSource,
-                            AppointmentSlotUtil.buildQueryDateRange( apptFormDTO.getIdForm( ), Timestamp.valueOf( startingDate.atStartOfDay( ) ).getTime( ),
-                                    Timestamp.valueOf( endingDate.atTime( LocalTime.MAX ) ).getTime( ) ) );
-                    DataSourceService.processIncrementalIndexing( sbuilderLogs, dataSource, collResult );
-                }
-                catch( ElasticClientException e )
-                {
-                    AppLogService.error( "Error during ElasticDataAppointmentListener reindexForm: " + sbuilderLogs, e );
-                }
+                collResult.add( new AppointmentSlotDataObject( apptFormDTO, appointmentSlot, AppointmentSlotUtil.INSTANCE_NAME, category ) );
             }
-        } ).start( );
+
+            DataSourceService.deleteByQuery( dataSource, AppointmentSlotUtil.buildQueryDateRange( apptFormDTO.getIdForm( ),
+                    Timestamp.valueOf( startingDate.atStartOfDay( ) ).getTime( ), Timestamp.valueOf( endingDate.atTime( LocalTime.MAX ) ).getTime( ) ) );
+            DataSourceService.processIncrementalIndexing( sbuilderLogs, dataSource, collResult );
+        }
+        catch( ElasticClientException e )
+        {
+            AppLogService.error( "Error during ElasticDataAppointmentListener reindexForm: " + sbuilderLogs, e );
+        }
     }
 
     /**
@@ -185,45 +169,34 @@ public class IndexingSlotService
     {
         if ( _bIndexIsRunning.compareAndSet( false, true ) )
         {
-
-            ( new Thread( )
+            try
             {
-                @Override
-                public void run( )
+                Integer nIdresource = nIdSlot;
+                do
                 {
-                    try
-                    {
-                        Integer nIdresource = nIdSlot;
-                        do
-                        {
 
-                            indexingSlot( nIdresource, dataSource );
-                            nIdresource = _queueSlotToIndex.poll( );
+                    indexingSlot( nIdresource, dataSource );
+                    nIdresource = _queueSlotToIndex.poll( );
 
-                        }
-                        while ( nIdresource != null );
-                    }
-                    catch( ElasticClientException e )
-                    {
-                        AppLogService.error( "Error during ElasticDataAppointmentListener reindexSlot: " + e.getMessage( ), e );
-                    }
-                    finally
-                    {
-                        _bIndexIsRunning.set( false );
-                        if ( !_queueSlotToIndex.isEmpty( ) )
-                        {
-
-                            indexSlot( _queueSlotToIndex.poll( ), dataSource );
-                        }
-                    }
                 }
-            } ).start( );
-
+                while ( nIdresource != null );
+            }
+            catch( ElasticClientException e )
+            {
+                AppLogService.error( "Error during ElasticDataAppointmentListener reindexSlot: " + e.getMessage( ), e );
+            }
+            finally
+            {
+                _bIndexIsRunning.set( false );
+                if ( !_queueSlotToIndex.isEmpty( ) )
+                {
+                    indexSlot( _queueSlotToIndex.poll( ), dataSource );
+                }
+            }
         }
         else
             if ( !_queueSlotToIndex.contains( nIdSlot ) )
             {
-
                 _queueSlotToIndex.add( nIdSlot );
             }
     }

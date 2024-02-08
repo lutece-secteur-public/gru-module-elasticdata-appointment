@@ -114,41 +114,30 @@ public class IndexingAppointmentService
     public void indexAppointmentStateAndHistory( AppointmentDataSource appointmentDataSource, AppointmentHistoryDataSource appointmentHistoryDataSource,
             int nIdAppointment )
     {
-
         if ( _bIndexHistoryIsRunning.compareAndSet( false, true ) )
         {
-            ( new Thread( )
+            try
             {
-                @Override
-                public void run( )
+                Integer nIdresource = nIdAppointment;
+                do
                 {
-                    try
-                    {
-                        Integer nIdresource = nIdAppointment;
-                        do
-                        {
-
-                            indexingAppointmentStateAndHistory( appointmentDataSource, appointmentHistoryDataSource, nIdresource );
-                            nIdresource = _queueAppointmentHistoryToIndex.poll( );
-
-                        }
-                        while ( nIdresource != null );
-                    }
-                    catch( ElasticClientException e )
-                    {
-                        AppLogService.error( "Error during ElasticDataAppointmentListener update partial appointment: " + e.getMessage( ), e );
-                    }
-                    finally
-                    {
-                        _bIndexHistoryIsRunning.set( false );
-                        if ( !_queueAppointmentHistoryToIndex.isEmpty( ) )
-                        {
-                            indexAppointmentStateAndHistory( appointmentDataSource, appointmentHistoryDataSource, _queueAppointmentHistoryToIndex.poll( ) );
-
-                        }
-                    }
+                    indexingAppointmentStateAndHistory( appointmentDataSource, appointmentHistoryDataSource, nIdresource );
+                    nIdresource = _queueAppointmentHistoryToIndex.poll( );
                 }
-            } ).start( );
+                while ( nIdresource != null );
+            }
+            catch( ElasticClientException e )
+            {
+                AppLogService.error( "Error during ElasticDataAppointmentListener update partial appointment: " + e.getMessage( ), e );
+            }
+            finally
+            {
+                _bIndexHistoryIsRunning.set( false );
+                if ( !_queueAppointmentHistoryToIndex.isEmpty( ) )
+                {
+                    indexAppointmentStateAndHistory( appointmentDataSource, appointmentHistoryDataSource, _queueAppointmentHistoryToIndex.poll( ) );
+                }
+            }
         }
         else
             if ( !_queueAppointmentHistoryToIndex.contains( nIdAppointment ) )
@@ -169,45 +158,32 @@ public class IndexingAppointmentService
     {
         if ( _bIndexAppointmentIsRunning.compareAndSet( false, true ) )
         {
-
-            ( new Thread( )
+            try
             {
-                @Override
-                public void run( )
+                Integer nIdresource = nIdAppointment;
+                do
                 {
-                    try
-                    {
-                        Integer nIdresource = nIdAppointment;
-                        do
-                        {
-
-                            indexingAppointment( appointmentDataSource, nIdresource );
-                            nIdresource = _queueAppointmentToIndex.poll( );
-
-                        }
-                        while ( nIdresource != null );
-
-                    }
-                    catch( ElasticClientException e )
-                    {
-                        AppLogService.error( "Error during ElasticDataAppointmentListener reindexSlot: " + e.getMessage( ), e );
-                    }
-                    finally
-                    {
-                        _bIndexAppointmentIsRunning.set( false );
-                        if ( !_queueAppointmentToIndex.isEmpty( ) )
-                        {
-
-                            indexAppointment( appointmentDataSource, _queueAppointmentToIndex.poll( ) );
-                        }
-                    }
+                    indexingAppointment( appointmentDataSource, nIdresource );
+                    nIdresource = _queueAppointmentToIndex.poll( );
                 }
-            } ).start( );
+                while ( nIdresource != null );
+            }
+            catch( ElasticClientException e )
+            {
+                AppLogService.error( "Error during ElasticDataAppointmentListener reindexSlot: " + e.getMessage( ), e );
+            }
+            finally
+            {
+                _bIndexAppointmentIsRunning.set( false );
+                if ( !_queueAppointmentToIndex.isEmpty( ) )
+                {
+                    indexAppointment( appointmentDataSource, _queueAppointmentToIndex.poll( ) );
+                }
+            }
         }
         else
             if ( !_queueAppointmentToIndex.contains( nIdAppointment ) )
             {
-
                 _queueAppointmentToIndex.add( nIdAppointment );
             }
     }
