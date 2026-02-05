@@ -39,7 +39,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalField;
 import java.time.temporal.WeekFields;
 import java.util.Comparator;
@@ -51,6 +50,8 @@ import java.util.Objects;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import jakarta.enterprise.inject.spi.CDI;
 
 import org.apache.commons.collections.CollectionUtils;
 
@@ -69,14 +70,13 @@ import fr.paris.lutece.plugins.appointment.web.dto.AppointmentFormDTO;
 import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentDataObject;
 import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.AppointmentForm;
 import fr.paris.lutece.plugins.workflowcore.business.state.State;
-import fr.paris.lutece.plugins.workflowcore.service.state.StateService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
+import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.portal.web.l10n.LocaleService;
 
 /**
  * Utils for the slots (Uid, Url, Item ...)
- * 
+ *
  * @author Laurent Payen
  *
  */
@@ -85,7 +85,6 @@ public final class AppointmentSlotUtil
 
     public static final String PROPERTY_SITE = "lutece.name";
     public static final DateTimeFormatter SLOT__ID_DATE_FORMATTER = DateTimeFormatter.ofPattern( "yyyyMMdd'T'HHmmss" );
-    private static final StateService _stateService = SpringContextService.getBean( StateService.BEAN_SERVICE );
     public static final String INSTANCE_NAME = AppPropertiesService.getProperty( AppointmentSlotUtil.PROPERTY_SITE );
 
     /**
@@ -100,7 +99,7 @@ public final class AppointmentSlotUtil
      *
      * Slots don't have ids anymore, so we use the form_id and the slot date as an ID. We try to make a "readable" id with the form id and the slot datetime,
      * using only alphanumerical caracters to avoid potential problems with code parsing this ID.
-     * 
+     *
      */
     public static String getSlotUid( Slot slot )
     {
@@ -110,7 +109,7 @@ public final class AppointmentSlotUtil
 
     /**
      * Get all the slots of a form by calling the method buildListSlot of the plugin RDV
-     * 
+     *
      * @param appointmentForm
      *            the appointment form
      * @return all the slots of a form
@@ -152,7 +151,7 @@ public final class AppointmentSlotUtil
 
     /**
      * Get all the slots of a form by calling the method buildListSlot of the plugin RDV
-     * 
+     *
      * @param appointmentForm
      *            the appointment form
      * @return all the slots of a form
@@ -190,7 +189,7 @@ public final class AppointmentSlotUtil
 
     /**
      * Get all the slots of a form by calling the method buildListSlot of the plugin RDV
-     * 
+     *
      * @param appointmentForm
      *            the appointment form
      * @return all the slots of a form
@@ -218,7 +217,7 @@ public final class AppointmentSlotUtil
 
     /**
      * Get the state of appointment
-     * 
+     *
      * @param idAppointment
      *            The id appointment
      * @param idWorkflow
@@ -227,13 +226,13 @@ public final class AppointmentSlotUtil
      */
     public static State getState( int idAppointment, int idWorkflow )
     {
-
-        return _stateService.findByResource( idAppointment, Appointment.APPOINTMENT_RESOURCE_TYPE, idWorkflow );
+        IStateService stateService = CDI.current( ).select( IStateService.class ).get( );
+        return stateService.findByResource( idAppointment, Appointment.APPOINTMENT_RESOURCE_TYPE, idWorkflow );
     }
 
     /**
      * build query for delete a document into elastic-search
-     * 
+     *
      * @param idForm
      *            the Id form
      * @return delete query
@@ -248,7 +247,7 @@ public final class AppointmentSlotUtil
 
     /**
      * build query for delete a document into elastic-search
-     * 
+     *
      * @param idForm
      *            the Id form
      * @return delete query
@@ -261,9 +260,9 @@ public final class AppointmentSlotUtil
 
     /**
      * build query for delete a document into elastic-search
-     * 
-     * @param idForm
-     *            the Id form
+     *
+     * @param idResource
+     *            the Id resource
      * @return delete query
      */
     public static String buildQueryIdResource( int idResource )
@@ -276,7 +275,7 @@ public final class AppointmentSlotUtil
     }
 
     /**
-     * 
+     *
      * @param apptData
      *            the AppointmentDataObject
      * @param listSlots
@@ -319,11 +318,13 @@ public final class AppointmentSlotUtil
 
     /**
      * Get the state of appointment
-     * 
+     *
      * @param listAvailableSlots
      *            The list of available slots
-     * @param idWorkflow
-     *            The if form
+     * @param localTime
+     *            The local time
+     * @param startAppointment
+     *            The start appointment
      * @return State of appointment
      */
     public static long getTimeUntilAvailability( List<Slot> listAvailableSlots, LocalDateTime localTime, LocalDateTime startAppointment )

@@ -114,7 +114,7 @@ public class IndexingSlotService
             }
             catch( ElasticClientException e )
             {
-                AppLogService.error( "Error during ElasticDataAppointmentListener reindexForm: " + sbuilderLogs, e );
+                AppLogService.error( "Error during ElasticDataAppointmentListener reindexForm: {}", sbuilderLogs, e );
             }
             finally
             {
@@ -153,7 +153,7 @@ public class IndexingSlotService
         }
         catch( ElasticClientException e )
         {
-            AppLogService.error( "Error during ElasticDataAppointmentListener reindexForm: " + sbuilderLogs, e );
+            AppLogService.error( "Error during ElasticDataAppointmentListener reindexForm: {}", sbuilderLogs, e );
         }
     }
 
@@ -183,7 +183,7 @@ public class IndexingSlotService
             }
             catch( ElasticClientException e )
             {
-                AppLogService.error( "Error during ElasticDataAppointmentListener reindexSlot: " + e.getMessage( ), e );
+                AppLogService.error( "Error during ElasticDataAppointmentListener reindexSlot: {}", e.getMessage( ), e );
             }
             finally
             {
@@ -242,7 +242,7 @@ public class IndexingSlotService
         }
         catch( ElasticClientException e )
         {
-            AppLogService.error( "Error during ElasticDataAppointmentListener remove Form: " + e.getMessage( ), e );
+            AppLogService.error( "Error during ElasticDataAppointmentListener remove Form: {}", e.getMessage( ), e );
         }
     }
 
