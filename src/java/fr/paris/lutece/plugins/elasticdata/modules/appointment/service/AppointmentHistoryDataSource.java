@@ -36,18 +36,38 @@ package fr.paris.lutece.plugins.elasticdata.modules.appointment.service;
 import fr.paris.lutece.plugins.appointment.business.appointment.AppointmentHome;
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataSource;
 import fr.paris.lutece.plugins.elasticdata.business.DataObject;
-import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  * AppointmentHistoryDataSource
  */
+@ApplicationScoped
 public class AppointmentHistoryDataSource extends AbstractDataSource
 {
     @Inject
-    IResourceHistoryService _resourceHistoryService;
+    private IndexingAppointmentService _indexingAppointmentService;
+
+    public AppointmentHistoryDataSource( )
+    {
+    }
+
+    @Inject
+    public AppointmentHistoryDataSource(
+            @ConfigProperty( name = "elasticdata-appointment.appointmentHistoryDataSource.id" ) String strDataSourceId,
+            @ConfigProperty( name = "elasticdata-appointment.appointmentHistoryDataSource.name" ) String strDataSourceName,
+            @ConfigProperty( name = "elasticdata-appointment.appointmentHistoryDataSource.targetIndexName" ) String strDataSourceTargetIndexName,
+            @ConfigProperty( name = "elasticdata-appointment.appointmentHistoryDataSource.mappings" ) String strDataSourceMappings )
+    {
+        setId( strDataSourceId );
+        setName( strDataSourceName );
+        setTargetIndexName( strDataSourceTargetIndexName );
+        setMappings( strDataSourceMappings );
+    }
 
     @Override
     public List<String> getIdDataObjects( )
@@ -60,7 +80,7 @@ public class AppointmentHistoryDataSource extends AbstractDataSource
     public List<DataObject> getDataObjects( List<String> listIdDataObjects )
     {
 
-        return IndexingAppointmentService.getService( )
+        return _indexingAppointmentService
                 .buildHistoryWfDataObjects( listIdDataObjects.stream( ).map( Integer::parseInt ).collect( Collectors.toList( ) ) );
     }
 

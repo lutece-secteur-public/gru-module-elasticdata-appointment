@@ -38,6 +38,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import fr.paris.lutece.plugins.appointment.business.category.Category;
 import fr.paris.lutece.plugins.appointment.business.category.CategoryHome;
 import fr.paris.lutece.plugins.appointment.business.slot.Slot;
@@ -51,8 +55,26 @@ import fr.paris.lutece.plugins.elasticdata.modules.appointment.business.Appointm
 /**
  * Data source for appointment
  */
+@ApplicationScoped
 public class AppointmentSlotDataSource extends AbstractDataSource
 {
+
+    public AppointmentSlotDataSource( )
+    {
+    }
+
+    @Inject
+    public AppointmentSlotDataSource(
+            @ConfigProperty( name = "elasticdata-appointment.appointmentSlotDataSource.id" ) String strDataSourceId,
+            @ConfigProperty( name = "elasticdata-appointment.appointmentSlotDataSource.name" ) String strDataSourceName,
+            @ConfigProperty( name = "elasticdata-appointment.appointmentSlotDataSource.targetIndexName" ) String strDataSourceTargetIndexName,
+            @ConfigProperty( name = "elasticdata-appointment.appointmentSlotDataSource.mappings" ) String strDataSourceMappings )
+    {
+        setId( strDataSourceId );
+        setName( strDataSourceName );
+        setTargetIndexName( strDataSourceTargetIndexName );
+        setMappings( strDataSourceMappings );
+    }
 
     /**
      * {@inheritDoc}
