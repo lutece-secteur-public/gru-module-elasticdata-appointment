@@ -36,6 +36,10 @@ package fr.paris.lutece.plugins.elasticdata.modules.appointment.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import fr.paris.lutece.plugins.appointment.business.appointment.AppointmentHome;
 import fr.paris.lutece.plugins.elasticdata.business.AbstractDataSource;
 import fr.paris.lutece.plugins.elasticdata.business.DataObject;
@@ -43,8 +47,29 @@ import fr.paris.lutece.plugins.elasticdata.business.DataObject;
 /**
  * Data source for appointment
  */
+@ApplicationScoped
 public class AppointmentDataSource extends AbstractDataSource
 {
+    @Inject
+    private IndexingAppointmentService _indexingAppointmentService;
+
+    public AppointmentDataSource( )
+    {
+    }
+
+    @Inject
+    public AppointmentDataSource(
+            @ConfigProperty( name = "elasticdata-appointment.appointmentDataSource.id" ) String strDataSourceId,
+            @ConfigProperty( name = "elasticdata-appointment.appointmentDataSource.name" ) String strDataSourceName,
+            @ConfigProperty( name = "elasticdata-appointment.appointmentDataSource.targetIndexName" ) String strDataSourceTargetIndexName,
+            @ConfigProperty( name = "elasticdata-appointment.appointmentDataSource.mappings" ) String strDataSourceMappings )
+    {
+        setId( strDataSourceId );
+        setName( strDataSourceName );
+        setTargetIndexName( strDataSourceTargetIndexName );
+        setMappings( strDataSourceMappings );
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -62,7 +87,7 @@ public class AppointmentDataSource extends AbstractDataSource
     public List<DataObject> getDataObjects( List<String> idList )
     {
         List<Integer> listIdDataObject = idList.stream( ).map( Integer::parseInt ).collect( Collectors.toList( ) );
-        return IndexingAppointmentService.getService( ).buildDataObjects( listIdDataObject );
+        return _indexingAppointmentService.buildDataObjects( listIdDataObject );
     }
 
 }

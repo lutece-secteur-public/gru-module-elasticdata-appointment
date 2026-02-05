@@ -33,105 +33,167 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.service.listener;
 
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
-import javax.inject.Inject;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.ObservesAsync;
+import jakarta.inject.Inject;
+
 import fr.paris.lutece.plugins.appointment.business.planning.WeekDefinition;
 import fr.paris.lutece.plugins.appointment.business.rule.ReservationRule;
-import fr.paris.lutece.plugins.appointment.business.slot.Slot;
 import fr.paris.lutece.plugins.appointment.service.FormService;
 import fr.paris.lutece.plugins.appointment.service.ReservationRuleService;
-import fr.paris.lutece.plugins.appointment.service.listeners.IFormListener;
-import fr.paris.lutece.plugins.appointment.service.listeners.ISlotListener;
-import fr.paris.lutece.plugins.appointment.service.listeners.IWeekDefinitionListener;
+import fr.paris.lutece.plugins.appointment.service.event.FormEvent;
+import fr.paris.lutece.plugins.appointment.service.event.SlotEndingTimeChangedEvent;
+import fr.paris.lutece.plugins.appointment.service.event.SlotEvent;
+import fr.paris.lutece.plugins.appointment.service.event.WeekDefinitionEvent;
 import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.AppointmentSlotDataSource;
 import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.IndexingSlotService;
+import fr.paris.lutece.portal.service.event.EventAction;
+import fr.paris.lutece.portal.service.event.Type;
 
 /**
- * Data source for appointment
+ * CDI event listener for appointment slot indexing in Elasticsearch
  */
-public class AppointmentSlotServiceListener implements IFormListener, ISlotListener, IWeekDefinitionListener
+@ApplicationScoped
+public class AppointmentSlotServiceListener
 {
     @Inject
     private AppointmentSlotDataSource _appointmentSlotDataSource;
 
-    @Override
-    public void notifyListWeeksChanged( int nIdForm, List<WeekDefinition> listWeek )
+    /**
+     * Handle week definition list changed event
+     *
+     * @param event
+     *            the week definition event
+     */
+    public void onListWeeksChanged( @ObservesAsync @Type( EventAction.UPDATE ) WeekDefinitionEvent event )
     {
-        WeekDefinition weekWithDateMin = listWeek.stream( ).min( Comparator.comparing( WeekDefinition::getDateOfApply ) ).orElse( null );
-        WeekDefinition weekWithDateMax = listWeek.stream( ).max( Comparator.comparing( WeekDefinition::getEndingDateOfApply ) ).orElse( null );
+        List<WeekDefinition> listWeek = event.getListWeekDefinition( );
+        if ( listWeek != null && !listWeek.isEmpty( ) )
+        {
+            WeekDefinition weekWithDateMin = listWeek.stream( ).min( Comparator.comparing( WeekDefinition::getDateOfApply ) ).orElse( null );
+            WeekDefinition weekWithDateMax = listWeek.stream( ).max( Comparator.comparing( WeekDefinition::getEndingDateOfApply ) ).orElse( null );
 
-        IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdForm ),
-                weekWithDateMin.getDateOfApply( ), weekWithDateMax.getEndingDateOfApply( ) );
-
+            IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource,
+                    FormService.buildAppointmentFormWithoutReservationRule( event.getIdForm( ) ), weekWithDateMin.getDateOfApply( ),
+                    weekWithDateMax.getEndingDateOfApply( ) );
+        }
     }
 
-    @Override
-    public void notifyWeekAssigned( WeekDefinition weekDefinition )
+    /**
+     * Handle week definition assigned event
+     *
+     * @param event
+     *            the week definition event
+     */
+    public void onWeekAssigned( @ObservesAsync @Type( EventAction.CREATE ) WeekDefinitionEvent event )
     {
-
+        WeekDefinition weekDefinition = event.getWeekDefinition( );
         ReservationRule reservationRule = ReservationRuleService.findReservationRuleById( weekDefinition.getIdReservationRule( ) );
         IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource,
                 FormService.buildAppointmentFormWithoutReservationRule( reservationRule.getIdForm( ) ), weekDefinition.getDateOfApply( ),
                 weekDefinition.getEndingDateOfApply( ) );
-
     }
 
-    @Override
-    public void notifyWeekUnassigned( WeekDefinition weekDefinition )
+    /**
+     * Handle week definition unassigned event
+     *
+     * @param event
+     *            the week definition event
+     */
+    public void onWeekUnassigned( @ObservesAsync @Type( EventAction.REMOVE ) WeekDefinitionEvent event )
     {
-        notifyWeekAssigned( weekDefinition );
-
+        WeekDefinition weekDefinition = event.getWeekDefinition( );
+        ReservationRule reservationRule = ReservationRuleService.findReservationRuleById( weekDefinition.getIdReservationRule( ) );
+        IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource,
+                FormService.buildAppointmentFormWithoutReservationRule( reservationRule.getIdForm( ) ), weekDefinition.getDateOfApply( ),
+                weekDefinition.getEndingDateOfApply( ) );
     }
 
-    @Override
-    public void notifySlotChange( int nIdSlot )
+    /**
+     * Handle slot changed event
+     *
+     * @param event
+     *            the slot event
+     */
+    public void onSlotChanged( @ObservesAsync @Type( EventAction.UPDATE ) SlotEvent event )
     {
-        IndexingSlotService.indexSlot( nIdSlot, _appointmentSlotDataSource );
+        IndexingSlotService.indexSlot( event.getIdSlot( ), _appointmentSlotDataSource );
     }
 
-    @Override
-    public void notifySlotCreation( int nIdSlot )
+    /**
+     * Handle slot created event
+     *
+     * @param event
+     *            the slot event
+     */
+    public void onSlotCreated( @ObservesAsync @Type( EventAction.CREATE ) SlotEvent event )
     {
-        notifySlotChange( nIdSlot );
+        IndexingSlotService.indexSlot( event.getIdSlot( ), _appointmentSlotDataSource );
     }
 
-    @Override
-    public void notifySlotRemoval( Slot slot )
+    /**
+     * Handle slot removed event
+     *
+     * @param event
+     *            the slot event
+     */
+    public void onSlotRemoved( @ObservesAsync @Type( EventAction.REMOVE ) SlotEvent event )
     {
-        IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( slot.getIdForm( ) ),
-                slot.getEndingDateTime( ).toLocalDate( ), slot.getEndingDateTime( ).toLocalDate( ) );
-
+        if ( event.getSlot( ) != null )
+        {
+            IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource,
+                    FormService.buildAppointmentFormWithoutReservationRule( event.getSlot( ).getIdForm( ) ),
+                    event.getSlot( ).getEndingDateTime( ).toLocalDate( ), event.getSlot( ).getEndingDateTime( ).toLocalDate( ) );
+        }
     }
 
-    @Override
-    public void notifySlotEndingTimeHasChanged( int nIdSlot, int nIdFom, LocalDateTime endingDateTime )
+    /**
+     * Handle slot ending time changed event
+     *
+     * @param event
+     *            the slot ending time changed event
+     */
+    public void onSlotEndingTimeChanged( @ObservesAsync SlotEndingTimeChangedEvent event )
     {
-
-        IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdFom ),
-                endingDateTime.toLocalDate( ), endingDateTime.toLocalDate( ) );
-
+        IndexingSlotService.indexFormByDateRange( _appointmentSlotDataSource,
+                FormService.buildAppointmentFormWithoutReservationRule( event.getIdForm( ) ), event.getEndingDateTime( ).toLocalDate( ),
+                event.getEndingDateTime( ).toLocalDate( ) );
     }
 
-    @Override
-    public void notifyFormChange( int nIdForm )
+    /**
+     * Handle form changed event
+     *
+     * @param event
+     *            the form event
+     */
+    public void onFormChanged( @ObservesAsync @Type( EventAction.UPDATE ) FormEvent event )
     {
-        IndexingSlotService.indexForm( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdForm ) );
-
+        IndexingSlotService.indexForm( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( event.getIdForm( ) ) );
     }
 
-    @Override
-    public void notifyFormCreation( int nIdForm )
+    /**
+     * Handle form created event
+     *
+     * @param event
+     *            the form event
+     */
+    public void onFormCreated( @ObservesAsync @Type( EventAction.CREATE ) FormEvent event )
     {
-        IndexingSlotService.indexForm( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( nIdForm ) );
-
+        IndexingSlotService.indexForm( _appointmentSlotDataSource, FormService.buildAppointmentFormWithoutReservationRule( event.getIdForm( ) ) );
     }
 
-    @Override
-    public void notifyFormRemoval( int nIdForm )
+    /**
+     * Handle form removed event
+     *
+     * @param event
+     *            the form event
+     */
+    public void onFormRemoved( @ObservesAsync @Type( EventAction.REMOVE ) FormEvent event )
     {
-        IndexingSlotService.deleteSlotsForm( _appointmentSlotDataSource, nIdForm );
+        IndexingSlotService.deleteSlotsForm( _appointmentSlotDataSource, event.getIdForm( ) );
     }
 
 }

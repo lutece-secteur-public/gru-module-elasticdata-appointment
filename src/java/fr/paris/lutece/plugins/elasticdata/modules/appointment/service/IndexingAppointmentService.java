@@ -44,6 +44,10 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import org.apache.commons.collections.CollectionUtils;
 import fr.paris.lutece.plugins.appointment.business.appointment.Appointment;
 import fr.paris.lutece.plugins.appointment.business.category.Category;
@@ -68,42 +72,31 @@ import fr.paris.lutece.plugins.workflowcore.business.state.State;
 import fr.paris.lutece.plugins.workflowcore.business.state.StateFilter;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceHistoryService;
 import fr.paris.lutece.plugins.workflowcore.service.resource.IResourceWorkflowService;
-import fr.paris.lutece.plugins.workflowcore.service.resource.ResourceHistoryService;
-import fr.paris.lutece.plugins.workflowcore.service.resource.ResourceWorkflowService;
 import fr.paris.lutece.plugins.workflowcore.service.state.IStateService;
-import fr.paris.lutece.plugins.workflowcore.service.state.StateService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.ReferenceItem;
 
+@ApplicationScoped
 public class IndexingAppointmentService
 {
 
-    private IResourceHistoryService _resourceHistoryService = SpringContextService.getBean( ResourceHistoryService.BEAN_SERVICE );
-    private IStateService _stateService = SpringContextService.getBean( StateService.BEAN_SERVICE );
-    private IResourceWorkflowService _resourceWorkflowService = SpringContextService.getBean( ResourceWorkflowService.BEAN_SERVICE );
+    @Inject
+    private IResourceHistoryService _resourceHistoryService;
+    @Inject
+    private IStateService _stateService;
+    @Inject
+    private IResourceWorkflowService _resourceWorkflowService;
+
     private static AtomicBoolean _bIndexAppointmentIsRunning = new AtomicBoolean( false );
     private static AtomicBoolean _bIndexHistoryIsRunning = new AtomicBoolean( false );
     private static Queue<Integer> _queueAppointmentToIndex = new ConcurrentLinkedQueue<>( );
     private static Queue<Integer> _queueAppointmentHistoryToIndex = new ConcurrentLinkedQueue<>( );
-    private static IndexingAppointmentService _instance;
 
     private static final int _nBatchSize = 100;
 
     /**
-     * Return an instance of Indexing Appointment Service
-     * 
-     * @return instance of IndexingAppointmentService
-     */
-    public static IndexingAppointmentService getService( )
-    {
-
-        return ( _instance == null ) ? new IndexingAppointmentService( ) : _instance;
-    }
-
-    /**
      * index appointmentpartial data object and history data object
-     * 
+     *
      * @param appointmentDataSource
      *            the appointment DataSource
      * @param appointmentHistoryDataSource
@@ -128,7 +121,7 @@ public class IndexingAppointmentService
             }
             catch( ElasticClientException e )
             {
-                AppLogService.error( "Error during ElasticDataAppointmentListener update partial appointment: " + e.getMessage( ), e );
+                AppLogService.error( "Error during ElasticDataAppointmentListener update partial appointment: {}", e.getMessage( ), e );
             }
             finally
             {
@@ -148,7 +141,7 @@ public class IndexingAppointmentService
 
     /**
      * Index appointment data object
-     * 
+     *
      * @param appointmentDataSource
      *            the appointment Datasource
      * @param nIdAppointment
@@ -170,7 +163,7 @@ public class IndexingAppointmentService
             }
             catch( ElasticClientException e )
             {
-                AppLogService.error( "Error during ElasticDataAppointmentListener reindexSlot: " + e.getMessage( ), e );
+                AppLogService.error( "Error during ElasticDataAppointmentListener reindexSlot: {}", e.getMessage( ), e );
             }
             finally
             {
@@ -190,7 +183,7 @@ public class IndexingAppointmentService
 
     /**
      * Delete appointment in the index and his workflow history
-     * 
+     *
      * @param appointmentDataSource
      *            the appointment DataSource
      * @param appointmentHistoryDataSource
@@ -208,14 +201,14 @@ public class IndexingAppointmentService
         }
         catch( ElasticClientException e )
         {
-            AppLogService.error( "Error during ElasticDataAppointmentListener remove appointment: " + e.getMessage( ), e );
+            AppLogService.error( "Error during ElasticDataAppointmentListener remove appointment: {}", e.getMessage( ), e );
         }
 
     }
 
     /**
      * build data object to indexing
-     * 
+     *
      * @param listIdDataObject
      *            the list of data object
      * @return the list of data object
@@ -257,7 +250,7 @@ public class IndexingAppointmentService
 
     /**
      * Build history workflow data objects
-     * 
+     *
      * @param listIdDataObjects
      *            the list id resources/appointment
      * @return list DataObject
@@ -277,7 +270,7 @@ public class IndexingAppointmentService
 
     /**
      * index appointmentpartial data object and history data object
-     * 
+     *
      * @param appointmentDataSource
      *            the appointment DataSource
      * @param appointmentHistoryDataSource
@@ -310,7 +303,7 @@ public class IndexingAppointmentService
 
     /**
      * Index appointment data object
-     * 
+     *
      * @param appointmentDataSource
      *            the appointment Datasource
      * @param nIdAppointment
@@ -333,10 +326,10 @@ public class IndexingAppointmentService
 
     /**
      * build list of AppointmentHistoryDataObject object
-     * 
+     *
      * @param listResourceHistory
      *            the resource workflow history
-     * 
+     *
      * @return The list of AppointmentHistoryDataObject object
      */
     private List<AppointmentHistoryDataObject> getResourceHistoryListDataObject( List<ResourceHistory> listResourceHistory )
@@ -390,7 +383,7 @@ public class IndexingAppointmentService
 
     /**
      * return The duration in milli
-     * 
+     *
      * @param start
      *            The start time.
      * @param end
@@ -404,7 +397,7 @@ public class IndexingAppointmentService
 
     /**
      * Index list of appointment
-     * 
+     *
      * @param queueApptToIndex
      *            the Queue of id appointment
      * @param nIdAppointment
@@ -431,7 +424,7 @@ public class IndexingAppointmentService
 
     /**
      * Build appointment data object
-     * 
+     *
      * @param nIdAppointment
      *            the appointment id
      */
@@ -447,7 +440,7 @@ public class IndexingAppointmentService
 
     /**
      * build AppointmentHistoryDataObject objects
-     * 
+     *
      * @param nIdresource
      *            the id resource
      * @param appt
@@ -487,7 +480,7 @@ public class IndexingAppointmentService
 
     /**
      * Index list appointment and their history workflow
-     * 
+     *
      * @param appointmentDataSource
      *            the appointment DataSource
      * @param appointmentHistoryDataSource
@@ -496,8 +489,6 @@ public class IndexingAppointmentService
      *            the queue
      * @param nIdAppointment
      *            the id of appointment to index
-     * @param nIdAction
-     *            the action id
      * @throws ElasticClientException
      *             the ElasticClientException
      */
@@ -522,9 +513,9 @@ public class IndexingAppointmentService
 
     /**
      * Get appointment form
-     * 
-     * @param form
-     *            the form
+     *
+     * @param idForm
+     *            the form id
      * @return the appointment form
      */
     private AppointmentForm getAppointmentForm( int idForm )
@@ -537,7 +528,7 @@ public class IndexingAppointmentService
 
     /**
      * Get all appointment forms mapped with form id
-     * 
+     *
      * @return the map with form id and appointment form
      */
     private Map<Integer, AppointmentForm> getAllAppointmentForms( )

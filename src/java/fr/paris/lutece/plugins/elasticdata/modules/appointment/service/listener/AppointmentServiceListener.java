@@ -33,93 +33,80 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.service.listener;
 
-import java.util.List;
-import java.util.Locale;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.ObservesAsync;
+import jakarta.inject.Inject;
 
 import fr.paris.lutece.plugins.appointment.business.appointment.Appointment;
-import fr.paris.lutece.plugins.appointment.service.listeners.IAppointmentListener;
-import fr.paris.lutece.plugins.appointment.service.listeners.IAppointmentWorkflowActionListener;
+import fr.paris.lutece.plugins.appointment.service.event.AppointmentDateChangedEvent;
+import fr.paris.lutece.plugins.appointment.service.event.AppointmentEvent;
 import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.AppointmentDataSource;
 import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.AppointmentHistoryDataSource;
 import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.IndexingAppointmentService;
-import fr.paris.lutece.portal.business.event.EventRessourceListener;
 import fr.paris.lutece.portal.business.event.ResourceEvent;
+import fr.paris.lutece.portal.service.event.EventAction;
+import fr.paris.lutece.portal.service.event.Type;
 
 /**
- * Data source for appointment
+ * CDI event listener for appointment indexing in Elasticsearch
  */
-public class AppointmentServiceListener implements IAppointmentListener, IAppointmentWorkflowActionListener, EventRessourceListener
+@ApplicationScoped
+public class AppointmentServiceListener
 {
 
-    private static final String NAME = "APPOINTMENT_ELASTIC_DATA_LISTNER";
     @Inject
     private AppointmentDataSource _appointmentDataSource;
     @Inject
     private AppointmentHistoryDataSource _appointmentHistoryDataSource;
+    @Inject
+    private IndexingAppointmentService _indexingAppointmentService;
 
-    @Override
-    public void notifyAppointmentRemoval( int nIdAppointment )
+    /**
+     * Handle appointment removed event
+     *
+     * @param event
+     *            the appointment event
+     */
+    public void onAppointmentRemoved( @ObservesAsync @Type( EventAction.REMOVE ) AppointmentEvent event )
     {
-        IndexingAppointmentService.getService( ).deleteAppointmentAndHistory( _appointmentDataSource, _appointmentHistoryDataSource, nIdAppointment );
-
+        _indexingAppointmentService.deleteAppointmentAndHistory( _appointmentDataSource, _appointmentHistoryDataSource, event.getIdAppointment( ) );
     }
 
-    @Override
-    public String appointmentDateChanged( int nIdAppointment, List<Integer> listIdSlot, Locale locale )
+    /**
+     * Handle appointment date changed event
+     *
+     * @param event
+     *            the appointment date changed event
+     */
+    public void onAppointmentDateChanged( @ObservesAsync AppointmentDateChangedEvent event )
     {
-        IndexingAppointmentService.getService( ).indexAppointment( _appointmentDataSource, nIdAppointment );
-        return null;
+        _indexingAppointmentService.indexAppointment( _appointmentDataSource, event.getIdAppointment( ) );
     }
 
-    @Override
-    public void notifyAppointmentCreated( int nIdAppointment )
+    /**
+     * Handle appointment created event
+     *
+     * @param event
+     *            the appointment event
+     */
+    public void onAppointmentCreated( @ObservesAsync @Type( EventAction.CREATE ) AppointmentEvent event )
     {
-        IndexingAppointmentService.getService( ).indexAppointment( _appointmentDataSource, nIdAppointment );
-
+        _indexingAppointmentService.indexAppointment( _appointmentDataSource, event.getIdAppointment( ) );
     }
 
-    @Override
-    public void notifyAppointmentUpdated( int nIdAppointment )
-    {
-        // update of functional data (name, tel...)
-    }
-
-    @Override
-    public void notifyAppointmentWFActionTriggered( int nIdAppointment, int nIdAction )
-    {
-        // it's already called by updatedResource(ResourceEvent event)
-    }
-
-    @Override
-    public String getName( )
-    {
-
-        return NAME;
-    }
-
-    @Override
-    public void addedResource( ResourceEvent event )
-    {
-        // listener on the actions of the workflow
-        // addition of the resource in the workflow_resource_workflow
-    }
-
-    @Override
-    public void deletedResource( ResourceEvent event )
-    {
-        // listener on the actions of the workflow
-        // it's already called by notifyAppointmentRemoval( int nIdAppointment )
-
-    }
-
-    @Override
-    public void updatedResource( ResourceEvent event )
+    /**
+     * CDI observer for workflow resource update events
+     *
+     * @param event
+     *            the resource event
+     */
+    public void updatedResource( @Observes @Type( EventAction.UPDATE ) ResourceEvent event )
     {
         // listener on the actions of the workflow
         if ( event.getTypeResource( ).equals( Appointment.APPOINTMENT_RESOURCE_TYPE ) )
         {
-            IndexingAppointmentService.getService( ).indexAppointmentStateAndHistory( _appointmentDataSource, _appointmentHistoryDataSource,
+            _indexingAppointmentService.indexAppointmentStateAndHistory( _appointmentDataSource, _appointmentHistoryDataSource,
                     Integer.parseInt( event.getIdResource( ) ) );
         }
 

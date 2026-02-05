@@ -33,30 +33,20 @@
  */
 package fr.paris.lutece.plugins.elasticdata.modules.appointment.business;
 
-import java.text.DateFormat;
-import java.util.Locale;
-
-import org.apache.commons.beanutils.BeanUtilsBean;
-import org.dozer.converters.DateConverter;
-
-import fr.paris.lutece.plugins.elasticdata.modules.appointment.service.listener.AppointmentServiceListener;
-import fr.paris.lutece.portal.service.event.ResourceEventManager;
 import fr.paris.lutece.portal.service.plugin.Plugin;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
 
 /**
  * ElasticDataAppointment Plugin
- * 
+ *
  * @author YAHIAOUI RAFIK
- * 
+ *
  */
-public final class ElasticDataAppointmentPlugin extends Plugin
+public class ElasticDataAppointmentPlugin extends Plugin
 {
     /**
      * Name of the ElasticDataAppointment plugin
      */
     public static final String PLUGIN_NAME = "elasticdata-appointment";
-    public static final String BEAN_APPOINTMENT_EVENT_LISTENER = "elasticdata-appointment.appointmentServiceListener";
 
     /**
      * {@inheritDoc}
@@ -64,26 +54,6 @@ public final class ElasticDataAppointmentPlugin extends Plugin
     @Override
     public void init( )
     {
-        AppointmentServiceListener appointmentServiceListener = SpringContextService.getBean( BEAN_APPOINTMENT_EVENT_LISTENER );
-        if ( appointmentServiceListener != null )
-        {
-
-            ResourceEventManager.register( appointmentServiceListener );
-        }
-        BeanUtilsBean.getInstance( ).getConvertUtils( )
-                .register( new DateConverter( DateFormat.getDateInstance( DateFormat.SHORT, getPluginLocale( Locale.FRANCE ) ) ), java.sql.Date.class );
-
-    }
-
-    /**
-     * Get the locale used by this plugin
-     * 
-     * @param locale
-     *            The locale preferred by the user
-     * @return The locale used by this plugin
-     */
-    public static Locale getPluginLocale( Locale locale )
-    {
-        return locale;
+        // Date conversion is handled by lutece-core BeanUtil in v8
     }
 }
