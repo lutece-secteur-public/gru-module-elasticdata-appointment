@@ -40,12 +40,23 @@
         	<version>[4.0.0-beta-01,)</version>
         	<type>lutece-plugin</type>
         </dependency>
+        <dependency>
+            <groupId>fr.paris.lutece.plugins</groupId>
+            <artifactId>plugin-workflow</artifactId>
+            <version>[7.0.0-SNAPSHOT,)</version>
+            <type>lutece-plugin</type>
+        </dependency>
+        <dependency>
+            <groupId>fr.paris.lutece.plugins</groupId>
+            <artifactId>library-lutece-unit-testing</artifactId>
+            <type>jar</type>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
     <properties>
         <componentName>elasticdata-appointment</componentName>
-        <jiraProjectName>MEAPPT</jiraProjectName>
         <jiraComponentId />
     </properties>
      <scm>

@@ -53,6 +53,10 @@ import java.util.stream.Collectors;
 
 import jakarta.enterprise.inject.spi.CDI;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import org.apache.commons.collections.CollectionUtils;
 
 import fr.paris.lutece.plugins.appointment.business.appointment.Appointment;
@@ -86,6 +90,8 @@ public final class AppointmentSlotUtil
     public static final String PROPERTY_SITE = "lutece.name";
     public static final DateTimeFormatter SLOT__ID_DATE_FORMATTER = DateTimeFormatter.ofPattern( "yyyyMMdd'T'HHmmss" );
     public static final String INSTANCE_NAME = AppPropertiesService.getProperty( AppointmentSlotUtil.PROPERTY_SITE );
+    private static final String FIELD_FORM_ID = "appointmentForm.idForms";
+    private static final ObjectMapper MAPPER = new ObjectMapper( );
 
     /**
      * Private constructor - this class does not need to be instantiated
@@ -231,7 +237,7 @@ public final class AppointmentSlotUtil
     }
 
     /**
-     * build query for delete a document into elastic-search
+     * Build the delete-by-query body matching every document of a form.
      *
      * @param idForm
      *            the Id form
@@ -239,27 +245,33 @@ public final class AppointmentSlotUtil
      */
     public static String buildQuery( int idForm )
     {
-        StringBuilder sbuilder = new StringBuilder( );
-        sbuilder.append( "{ \"query\": { \"term\": { \"appointmentForm.idForms\":" + idForm + "} }}" );
-
-        return sbuilder.toString( );
+        ObjectNode query = MAPPER.createObjectNode( );
+        query.putObject( "query" ).putObject( "term" ).put( FIELD_FORM_ID, idForm );
+        return query.toString( );
     }
 
     /**
-     * build query for delete a document into elastic-search
+     * Build the delete-by-query body matching the documents of a form whose timestamp lies in a range.
      *
      * @param idForm
      *            the Id form
+     * @param startingDate
+     *            the start of the range, epoch milliseconds
+     * @param endingDate
+     *            the end of the range, epoch milliseconds
      * @return delete query
      */
     public static String buildQueryDateRange( int idForm, long startingDate, long endingDate )
     {
-        return "{\"query\": {\"bool\": {\"must\": [ { \"term\": { \"appointmentForm.idForms\":" + idForm + "}},{ \"range\": {\"timestamp\":{\"from\":"
-                + startingDate + ",\"to\":" + endingDate + "}}}]}}}";
+        ObjectNode query = MAPPER.createObjectNode( );
+        ArrayNode must = query.putObject( "query" ).putObject( "bool" ).putArray( "must" );
+        must.addObject( ).putObject( "term" ).put( FIELD_FORM_ID, idForm );
+        must.addObject( ).putObject( "range" ).putObject( "timestamp" ).put( "from", startingDate ).put( "to", endingDate );
+        return query.toString( );
     }
 
     /**
-     * build query for delete a document into elastic-search
+     * Build the delete-by-query body matching the history documents of an appointment of this site.
      *
      * @param idResource
      *            the Id resource
@@ -267,11 +279,9 @@ public final class AppointmentSlotUtil
      */
     public static String buildQueryIdResource( int idResource )
     {
-
-        StringBuilder sbuilder = new StringBuilder( );
-        sbuilder.append( "{ \"query\": { \"match\": { \"appointmentId\":\"" + AppointmentSlotUtil.INSTANCE_NAME + "_" + idResource + "\"} }}" );
-
-        return sbuilder.toString( );
+        ObjectNode query = MAPPER.createObjectNode( );
+        query.putObject( "query" ).putObject( "match" ).put( "appointmentId", INSTANCE_NAME + "_" + idResource );
+        return query.toString( );
     }
 
     /**
