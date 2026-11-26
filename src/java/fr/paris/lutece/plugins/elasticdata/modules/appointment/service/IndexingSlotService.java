@@ -107,8 +107,9 @@ public class IndexingSlotService
 
                     }
 
-                    DataSourceService.deleteByQuery( dataSource, AppointmentSlotUtil.buildQuery( apptFormDTO.getIdForm( ) ) );
-                    DataSourceService.processIncrementalIndexing( sbuilderLogs, dataSource, collResult );
+                    String strQuery = AppointmentSlotUtil.buildQuery( apptFormDTO.getIdForm( ) );
+                    replaceDocuments( ( ) -> DataSourceService.deleteByQuery( dataSource, strQuery ),
+                            ( ) -> DataSourceService.processIncrementalIndexing( sbuilderLogs, dataSource, collResult ) );
                 }
 
             }
@@ -147,9 +148,10 @@ public class IndexingSlotService
                 collResult.add( new AppointmentSlotDataObject( apptFormDTO, appointmentSlot, AppointmentSlotUtil.INSTANCE_NAME, category ) );
             }
 
-            DataSourceService.deleteByQuery( dataSource, AppointmentSlotUtil.buildQueryDateRange( apptFormDTO.getIdForm( ),
-                    Timestamp.valueOf( startingDate.atStartOfDay( ) ).getTime( ), Timestamp.valueOf( endingDate.atTime( LocalTime.MAX ) ).getTime( ) ) );
-            DataSourceService.processIncrementalIndexing( sbuilderLogs, dataSource, collResult );
+            String strQuery = AppointmentSlotUtil.buildQueryDateRange( apptFormDTO.getIdForm( ),
+                    Timestamp.valueOf( startingDate.atStartOfDay( ) ).getTime( ), Timestamp.valueOf( endingDate.atTime( LocalTime.MAX ) ).getTime( ) );
+            replaceDocuments( ( ) -> DataSourceService.deleteByQuery( dataSource, strQuery ),
+                    ( ) -> DataSourceService.processIncrementalIndexing( sbuilderLogs, dataSource, collResult ) );
         }
         catch( ElasticClientException e )
         {
@@ -333,4 +335,47 @@ public class IndexingSlotService
         return _lockIndexToLunch.get( nkey );
     }
 
+
+    /**
+     * A call to Elastic
+     */
+    @FunctionalInterface
+    interface ElasticCall
+    {
+        /**
+         * Run the call
+         *
+         * @throws ElasticClientException
+         *             if Elastic reports an error
+         */
+        void run( ) throws ElasticClientException;
+    }
+
+    /**
+     * Replace the documents of a form: delete the documents matching the query, then index the current slots.
+     * A deletion that ends in error (for instance documents still in version conflict after the passes of the library,
+     * i.e. rewritten meanwhile by a concurrent indexing) does not stop the indexing: the slots are indexed by their
+     * document id, so the remaining documents are overwritten with the current data instead of the form being left
+     * without slots in the index.
+     *
+     * @param delete
+     *            the deletion of the documents of the form
+     * @param insert
+     *            the indexing of the current slots
+     * @throws ElasticClientException
+     *             if the indexing fails
+     */
+    static void replaceDocuments( ElasticCall delete, ElasticCall insert ) throws ElasticClientException
+    {
+        try
+        {
+            delete.run( );
+        }
+        catch( ElasticClientException e )
+        {
+            AppLogService.info( "ElasticDataAppointment: the documents of the form could not all be deleted before its reindexing, the slots are indexed anyway: {}",
+                    e.getMessage( ) );
+        }
+        insert.run( );
+    }
 }
