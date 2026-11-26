@@ -91,6 +91,8 @@ public class IndexingAppointmentService
     private static AtomicBoolean _bIndexHistoryIsRunning = new AtomicBoolean( false );
     private static Queue<Integer> _queueAppointmentToIndex = new ConcurrentLinkedQueue<>( );
     private static Queue<Integer> _queueAppointmentHistoryToIndex = new ConcurrentLinkedQueue<>( );
+    private static Queue<Integer> _queueAppointmentHistoryToDelete = new ConcurrentLinkedQueue<>( );
+    private static final int HISTORY_DELETION_ATTEMPTS = 2;
 
     private static final int _nBatchSize = 100;
 
@@ -125,7 +127,10 @@ public class IndexingAppointmentService
             }
             finally
             {
+                // the removals of appointments received during this indexing are applied after its writes
+                deletePendingHistories( appointmentHistoryDataSource );
                 _bIndexHistoryIsRunning.set( false );
+                processHistoryDeletions( appointmentHistoryDataSource );
                 if ( !_queueAppointmentHistoryToIndex.isEmpty( ) )
                 {
                     indexAppointmentStateAndHistory( appointmentDataSource, appointmentHistoryDataSource, _queueAppointmentHistoryToIndex.poll( ) );
@@ -182,7 +187,10 @@ public class IndexingAppointmentService
     }
 
     /**
-     * Delete appointment in the index and his workflow history
+     * Delete appointment in the index and his workflow history.
+     * The history documents are deleted under the same guard as the indexing of the histories: when that indexing is running (it may be
+     * writing the history of this very appointment, which puts a delete by query in version conflict and would put the documents back after
+     * it), the deletion is queued and applied once its writes are done.
      *
      * @param appointmentDataSource
      *            the appointment DataSource
@@ -196,14 +204,102 @@ public class IndexingAppointmentService
     {
         try
         {
-            DataSourceService.deleteById( appointmentDataSource, String.valueOf( nIdAppointment ) );
-            DataSourceService.deleteByQuery( appointmentHistoryDataSource, AppointmentSlotUtil.buildQueryIdResource( nIdAppointment ) );
+            deleteAppointmentDocument( appointmentDataSource, nIdAppointment );
         }
         catch( ElasticClientException e )
         {
             AppLogService.error( "Error during ElasticDataAppointmentListener remove appointment: {}", e.getMessage( ), e );
         }
+        // a removed appointment is no longer reindexed
+        _queueAppointmentHistoryToIndex.remove( nIdAppointment );
+        if ( !_queueAppointmentHistoryToDelete.contains( nIdAppointment ) )
+        {
+            _queueAppointmentHistoryToDelete.add( nIdAppointment );
+        }
+        processHistoryDeletions( appointmentHistoryDataSource );
+    }
 
+    /**
+     * Apply the pending deletions of histories now if no indexing of the histories is running; otherwise the running indexing applies them when
+     * its writes are done
+     *
+     * @param appointmentHistoryDataSource
+     *            the appointment history DataSource
+     */
+    private void processHistoryDeletions( AppointmentHistoryDataSource appointmentHistoryDataSource )
+    {
+        if ( !_queueAppointmentHistoryToDelete.isEmpty( ) && _bIndexHistoryIsRunning.compareAndSet( false, true ) )
+        {
+            try
+            {
+                deletePendingHistories( appointmentHistoryDataSource );
+            }
+            finally
+            {
+                _bIndexHistoryIsRunning.set( false );
+            }
+        }
+    }
+
+    /**
+     * Delete the history documents of the appointments removed meanwhile. Must be called while holding the guard of the indexing of the histories.
+     * A deletion still in version conflict is tried again once.
+     *
+     * @param appointmentHistoryDataSource
+     *            the appointment history DataSource
+     */
+    private void deletePendingHistories( AppointmentHistoryDataSource appointmentHistoryDataSource )
+    {
+        Integer nIdAppointment = _queueAppointmentHistoryToDelete.poll( );
+        while ( nIdAppointment != null )
+        {
+            for ( int nAttempt = 1; nAttempt <= HISTORY_DELETION_ATTEMPTS; nAttempt++ )
+            {
+                try
+                {
+                    deleteHistoryDocuments( appointmentHistoryDataSource, nIdAppointment );
+                    break;
+                }
+                catch( ElasticClientException e )
+                {
+                    if ( nAttempt == HISTORY_DELETION_ATTEMPTS )
+                    {
+                        AppLogService.error( "Error during ElasticDataAppointmentListener remove appointment: {}", e.getMessage( ), e );
+                    }
+                }
+            }
+            nIdAppointment = _queueAppointmentHistoryToDelete.poll( );
+        }
+    }
+
+    /**
+     * Delete the document of an appointment in the index
+     *
+     * @param appointmentDataSource
+     *            the appointment DataSource
+     * @param nIdAppointment
+     *            the appointment id
+     * @throws ElasticClientException
+     *             if Elastic reports an error
+     */
+    void deleteAppointmentDocument( AppointmentDataSource appointmentDataSource, int nIdAppointment ) throws ElasticClientException
+    {
+        DataSourceService.deleteById( appointmentDataSource, String.valueOf( nIdAppointment ) );
+    }
+
+    /**
+     * Delete the workflow history documents of an appointment in the index
+     *
+     * @param appointmentHistoryDataSource
+     *            the appointment history DataSource
+     * @param nIdAppointment
+     *            the appointment id
+     * @throws ElasticClientException
+     *             if Elastic reports an error
+     */
+    void deleteHistoryDocuments( AppointmentHistoryDataSource appointmentHistoryDataSource, int nIdAppointment ) throws ElasticClientException
+    {
+        DataSourceService.deleteByQuery( appointmentHistoryDataSource, AppointmentSlotUtil.buildQueryIdResource( nIdAppointment ) );
     }
 
     /**
@@ -280,7 +376,7 @@ public class IndexingAppointmentService
      * @throws ElasticClientException
      *             the Exception
      */
-    private void indexingAppointmentStateAndHistory( AppointmentDataSource appointmentDataSource, AppointmentHistoryDataSource appointmentHistoryDataSource,
+    void indexingAppointmentStateAndHistory( AppointmentDataSource appointmentDataSource, AppointmentHistoryDataSource appointmentHistoryDataSource,
             int nIdresource ) throws ElasticClientException
     {
         if ( _queueAppointmentHistoryToIndex.isEmpty( ) || _queueAppointmentHistoryToIndex.size( ) < _nBatchSize )
