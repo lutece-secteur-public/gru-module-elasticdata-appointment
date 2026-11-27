@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -70,6 +71,11 @@ public class IndexingSlotService
     private static ConcurrentMap<Integer, AtomicBoolean> _lockIndexToLunch = new ConcurrentHashMap<>( );
     private static AtomicBoolean _bIndexIsRunning = new AtomicBoolean( false );
     private static Queue<Integer> _queueSlotToIndex = new ConcurrentLinkedQueue<>( );
+    // writes of the slots of a form in the index (replaced by a test double in the unit tests)
+    static FormSlotsIndex _formSlotsIndex = new ElasticFormSlotsIndex( );
+    // forms removed while their reindexing was running: their slots are deleted when that reindexing ends
+    private static Set<Integer> _setFormToDelete = ConcurrentHashMap.newKeySet( );
+    private static final int FORM_DELETION_ATTEMPTS = 2;
 
     private IndexingSlotService( )
     {
@@ -96,20 +102,7 @@ public class IndexingSlotService
             {
                 while ( bIndexToLunch.compareAndSet( true, false ) )
                 {
-
-                    Collection<DataObject> collResult = new ArrayList<>( );
-                    Category category = CategoryHome.findByPrimaryKey( apptFormDTO.getIdCategory( ) );
-                    List<Slot> listSlots = AppointmentSlotUtil.getAllSlots( apptFormDTO );
-
-                    for ( Slot appointmentSlot : listSlots )
-                    {
-                        collResult.add( new AppointmentSlotDataObject( apptFormDTO, appointmentSlot, AppointmentSlotUtil.INSTANCE_NAME, category ) );
-
-                    }
-
-                    String strQuery = AppointmentSlotUtil.buildQuery( apptFormDTO.getIdForm( ) );
-                    replaceDocuments( ( ) -> DataSourceService.deleteByQuery( dataSource, strQuery ),
-                            ( ) -> DataSourceService.processIncrementalIndexing( sbuilderLogs, dataSource, collResult ) );
+                    _formSlotsIndex.reindex( dataSource, apptFormDTO, sbuilderLogs );
                 }
 
             }
@@ -119,7 +112,10 @@ public class IndexingSlotService
             }
             finally
             {
+                // a removal of the form received during this reindexing is applied after its writes
+                deletePendingSlots( dataSource, apptFormDTO.getIdForm( ) );
                 bIndexIsRunning.set( false );
+                processFormDeletion( dataSource, apptFormDTO.getIdForm( ) );
             }
         }
 
@@ -238,13 +234,66 @@ public class IndexingSlotService
      */
     public static void deleteSlotsForm( DataSource dataSource, int nIdForm )
     {
-        try
+        // the slots are deleted under the reindexing lock of the form: if a reindexing is running (it may be writing the slots read before
+        // the removal), the deletion is applied when its writes are done; a pending reindexing of the removed form is cancelled
+        getIndexToLunchLock( nIdForm ).set( false );
+        _setFormToDelete.add( nIdForm );
+        processFormDeletion( dataSource, nIdForm );
+    }
+
+    /**
+     * Apply a pending removal of the form now if no reindexing of the form is running; otherwise the running reindexing applies it when its
+     * writes are done
+     *
+     * @param dataSource
+     *            the data source
+     * @param nIdForm
+     *            the form id
+     */
+    private static void processFormDeletion( DataSource dataSource, int nIdForm )
+    {
+        AtomicBoolean bIndexIsRunning = getIndexRuningLock( nIdForm );
+        if ( _setFormToDelete.contains( nIdForm ) && bIndexIsRunning.compareAndSet( false, true ) )
         {
-            DataSourceService.deleteByQuery( dataSource, AppointmentSlotUtil.buildQuery( nIdForm ) );
+            try
+            {
+                deletePendingSlots( dataSource, nIdForm );
+            }
+            finally
+            {
+                bIndexIsRunning.set( false );
+            }
         }
-        catch( ElasticClientException e )
+    }
+
+    /**
+     * Delete the slots of the form if its removal is pending. Must be called while holding the reindexing lock of the form. A deletion still in
+     * version conflict is tried once more.
+     *
+     * @param dataSource
+     *            the data source
+     * @param nIdForm
+     *            the form id
+     */
+    private static void deletePendingSlots( DataSource dataSource, int nIdForm )
+    {
+        if ( _setFormToDelete.remove( nIdForm ) )
         {
-            AppLogService.error( "Error during ElasticDataAppointmentListener remove Form: {}", e.getMessage( ), e );
+            for ( int nAttempt = 1; nAttempt <= FORM_DELETION_ATTEMPTS; nAttempt++ )
+            {
+                try
+                {
+                    _formSlotsIndex.deleteSlots( dataSource, nIdForm );
+                    return;
+                }
+                catch( ElasticClientException e )
+                {
+                    if ( nAttempt == FORM_DELETION_ATTEMPTS )
+                    {
+                        AppLogService.error( "Error during ElasticDataAppointmentListener remove Form: {}", e.getMessage( ), e );
+                    }
+                }
+            }
         }
     }
 
@@ -377,5 +426,66 @@ public class IndexingSlotService
                     e.getMessage( ) );
         }
         insert.run( );
+    }
+
+    /**
+     * The writes of the slots of a form in the index
+     */
+    interface FormSlotsIndex
+    {
+        /**
+         * Replace the documents of the form by its current slots
+         *
+         * @param dataSource
+         *            the data source
+         * @param apptFormDTO
+         *            the form
+         * @param sbuilderLogs
+         *            the logs
+         * @throws ElasticClientException
+         *             if the indexing fails
+         */
+        void reindex( DataSource dataSource, AppointmentFormDTO apptFormDTO, StringBuilder sbuilderLogs ) throws ElasticClientException;
+
+        /**
+         * Delete the documents of the form
+         *
+         * @param dataSource
+         *            the data source
+         * @param nIdForm
+         *            the form id
+         * @throws ElasticClientException
+         *             if the deletion fails
+         */
+        void deleteSlots( DataSource dataSource, int nIdForm ) throws ElasticClientException;
+    }
+
+    /**
+     * The writes of the slots of a form in Elastic
+     */
+    static class ElasticFormSlotsIndex implements FormSlotsIndex
+    {
+        @Override
+        public void reindex( DataSource dataSource, AppointmentFormDTO apptFormDTO, StringBuilder sbuilderLogs ) throws ElasticClientException
+        {
+            Collection<DataObject> collResult = new ArrayList<>( );
+            Category category = CategoryHome.findByPrimaryKey( apptFormDTO.getIdCategory( ) );
+            List<Slot> listSlots = AppointmentSlotUtil.getAllSlots( apptFormDTO );
+
+            for ( Slot appointmentSlot : listSlots )
+            {
+                collResult.add( new AppointmentSlotDataObject( apptFormDTO, appointmentSlot, AppointmentSlotUtil.INSTANCE_NAME, category ) );
+            }
+
+            String strQuery = AppointmentSlotUtil.buildQuery( apptFormDTO.getIdForm( ) );
+            replaceDocuments( ( ) -> DataSourceService.deleteByQuery( dataSource, strQuery ),
+                    ( ) -> DataSourceService.processIncrementalIndexing( sbuilderLogs, dataSource, collResult ) );
+        }
+
+        @Override
+        public void deleteSlots( DataSource dataSource, int nIdForm ) throws ElasticClientException
+        {
+            DataSourceService.deleteByQuery( dataSource, AppointmentSlotUtil.buildQuery( nIdForm ) );
+        }
     }
 }
